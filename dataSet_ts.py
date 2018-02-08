@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import nilmtk
 import pickle
 from sklearn import preprocessing
 import matplotlib.pyplot as plt
@@ -24,6 +25,7 @@ class ReaderTS(object):
         self.flgScaling = flgScaling
         self.flgAggSumScaled = flgAggSumScaled
         self.flgFilterZeros = flgFilterZeros
+        self.debug = True #set to true if you want stats printed out for the houses
         assert (trainPer+valPer+testPer) == 1
         
     def rnn_data( self, data, idxStart, idxEnd, apps, stride, labels=False):
@@ -127,7 +129,7 @@ class ReaderTS(object):
             shapeX = [-1,self.time_steps]
 
             train_y, val_y, test_y = train_y[:,:,numApp], val_y[:,:,numApp], test_y[:,:,numApp]
-            print(train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
+            
             #Filtering zeros of specific appliance and respective aggregated instance
             if (self.flgFilterZeros==1):
                 train_y, idxTrain = self.filtering_zeros(train_y)
@@ -140,7 +142,6 @@ class ReaderTS(object):
 
             #Scaling
             lenApps=1
-            print(train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
             train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
             if (self.flgAggSumScaled==1):
                 pass # See the way to scale all x sets with respect to train_y
@@ -174,6 +175,34 @@ class ReaderTS(object):
 
         return [train_x, val_x, test_x, train_y, val_y, test_y]
 
+    def all_building_data(self,dataset,building, window):
+        dfTotal = []
+        df_build = pd.DataFrame(columns=['building']+self.listAppliances+['use'])#
+        dataset.set_window(*window)
+        elec = dataset.buildings[building].elec
+        for appliance in self.listAppliances:
+            pdAppSeries = pd.Series()
+            # Because more than one seems not to be the total number of instances for that window
+            serieApp = elec[appliance].power_series(sample_period=self.sample_period, resample=True).next() #pandas.core.series.Series
+            if (len(serieApp.index) !=0): # Some buildings may not have all the appliances
+                pdAppSeries = pdAppSeries.append(serieApp)
+            df_build[appliance] =  pdAppSeries
+        sizeBuild = len(df_build.index)
+        df_build['building'] = [building for row in range(sizeBuild)]
+        df_build['use'] = df_build[self.listAppliances].sum(axis=1)
+        return df_build.fillna(0)
+
+    def printStats(self, df,building_i,window, numApp):
+        '''
+        This expects a pandas data frame and will iterate over all appliances and print out min, max, median, avg,  stddev of each
+        '''
+        if (numApp!=-1):
+            truFileName=str(building_i)+'_'+self.listAppliances[numApp]+'_'+'_'+window[0]+'_'+window[1]#fileName[pos:]
+        else:
+            truFileName=str(building_i)+'_'+'all'+'_'+'_'+window[0]+'_'+window[1]
+        path = os.getcwd()
+        with open(path+"/stats/"+truFileName+".txt",'wb') as f:
+            f.write(str(df.describe(include='all')))
 
     def load_csvdata(self, fileName, numApp):#appliances, filename, self.sample_period, windows
         '''
@@ -187,8 +216,8 @@ class ReaderTS(object):
         pos = fileName.rfind("/")+1
         cwd=os.getcwd()
         isDataPort = True
-        #homes = ["2859","3413","6990","7951","8292"] # collection of home id availables
-        #home = homes[0]
+        homes = ["2859","3413","6990","7951","8292"] # collection of home id availables
+        home = homes[0]
         isMinutes = True
         path = fileName[:pos]
         lenApps = len(self.listAppliances)
@@ -212,22 +241,32 @@ class ReaderTS(object):
                     truFileName=str(building_i)+'_'+self.listAppliances[numApp]+'_'+'_'+window[0]+'_'+window[1]#fileName[pos:]
                 else:
                     truFileName=str(building_i)+'_'+'all'+'_'+'_'+window[0]+'_'+window[1]
-                allSetsBuild = []*len(self.listAppliances)
+                allSetsBuild = []*6
                 X = pickle.load( open(path+"/pickles/"+truFileName+"_X.pickle","rb"))
                 Y = pickle.load( open(path+"/pickles/"+truFileName+"_Y.pickle","rb"))
                 allSetsBuild = X['train'], X['val'],X['test'], Y['train'], Y['val'], Y['test']
             except (OSError, IOError) as e:
-                if(isMinutes):
-                    imagepath=path+"dataid_{}_minute.h5".format(building_i) 
+                if(isDataPort == False):
+                    dataset = nilmtk.DataSet(fileName)
+                    flgNewLoad = 1
+                    dataBuild = self.all_building_data(dataset,building_i, window)
+                    allSetsBuild = self.prepare_data(dataBuild, numApp)
                 else:
-                    imagepath=path+"dataid_{}_hour.h5".format(building_i)
-                print(imagepath)
-                imagearray  = pd.HDFStore(imagepath)
-                print imagearray.keys()
-                data=imagearray['df']
-                data = data.loc[data.index < window[1]]
-                data = data.loc[data.index > window[0]]
-                allSetsBuild = self.prepare_data(data, numApp)
+                    self.listAppliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1'] #TEMPORARY MEASURE! REMOVE ASAP
+                    if(isMinutes):
+                        imagepath=path+"dataid_{}_minute.h5".format(building_i) 
+                    else:
+                        imagepath=path+"dataid_{}_hour.h5".format(building_i)
+	            imagearray  = pd.HDFStore(imagepath)
+	            #print imagearray.keys()
+	            data=imagearray['df']
+                    data = data.loc[data.index < window[1]]
+                    data = data.loc[data.index>window[0]]
+                    
+   
+                    allSetsBuild = self.prepare_data(data, numApp)
+            if(self.debug == True):
+                self.printStats(data,building_i,window,numApp)
             totalX['train'] = np.concatenate((totalX['train'], allSetsBuild[0]),axis=0)
             totalX['val'] = np.concatenate((totalX['val'], allSetsBuild[1]),axis=0)
             totalX['test'] = np.concatenate((totalX['test'], allSetsBuild[2]),axis=0)
