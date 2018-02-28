@@ -32,12 +32,12 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
 windows = {2859:("2015-01-01", "2015-12-31"),6990:("2015-01-01", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
-listDates = ['2013-08-26 07:57','2016-10-15 08:18','2016-12-15 07:48']
+listDates = {2859:['2015-08-26 07:57'],6990:['2015-10-15 08:18']}
 
 def main(args):
     
-    theano.optimizer='fast_compile'
-    theano.config.exception_verbosity='high'
+    #theano.optimizer='fast_compile'
+    #theano.config.exception_verbosity='high'
 
     trial = int(args['trial'])
     pkl_name = 'vrnn_gmm_%d' % trial
@@ -71,11 +71,12 @@ def main(args):
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
 
-    q_z_dim = 60#150
-    p_z_dim = 60#150
-    p_x_dim = 20#250
-    x2s_dim = 30#250
-    z2s_dim = 30#150
+    q_z_dim = 100#150
+    p_z_dim = 100#150
+    p_x_dim = 60#250
+    x2s_dim = 40#250
+    y2s_dim = 50
+    z2s_dim = 60#150
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
@@ -83,30 +84,27 @@ def main(args):
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = {0:[10,20], 2:[20,30]} #for now use hard coded instancesPlot for kelly sampling
+    instancesPlot = instancesPlot = {0:[10,20], 2:[20,30]} 
     #instancesPlot = reader.build_dict_instances_plot(listDates, batch_size, Xval.shape[0])
 
-    ############# We switch x with y
     train_data = Dataport(name='train',
                          prep='normalize',
-                         cond=False,
+                         cond=True,# False
                          #path=data_path,
-                         validTime=0,
-                         inputX=ytrain,
-                         labels=Xtrain)
+                         inputX=Xtrain,
+                         labels=ytrain)
 
     X_mean = train_data.X_mean
     X_std = train_data.X_std
 
     valid_data = Dataport(name='valid',
                          prep='normalize',
-                         cond=False,
+                         cond=True,# False
                          #path=data_path,
                          X_mean=X_mean,
                          X_std=X_std,
-                         validTime=1,
-                         inputX=yval,
-                         labels = Xval)
+                         inputX=Xval,
+                         labels = yval)
 
 
     init_W = InitCell('rand')
@@ -114,8 +112,7 @@ def main(args):
     init_b = InitCell('zeros')
     init_b_sig = InitCell('const', mean=0.6)
 
-    x, mask = train_data.theano_vars()
-    #valTime  = train_data.theano_valTime_vars()
+    x, mask, y , y_mask = train_data.theano_vars()
 
     if (genCase ==1):
       inputX = x[:-1,:]
@@ -123,11 +120,11 @@ def main(args):
       n_steps = n_steps-1
     else:
       inputX = x
-      targetX = x      
+      targetX = x  
 
-    inputX.name = 'x_original'
+    x.name = 'x_original'
     if debug:
-        inputX.tag.test_value = np.zeros((15, batch_size, x_dim), dtype=np.float32)
+        x.tag.test_value = np.zeros((15, batch_size, x_dim), dtype=np.float32)
         temp = np.ones((15, batch_size), dtype=np.float32)
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
@@ -136,6 +133,14 @@ def main(args):
                               parent=['x_t'],
                               parent_dim=[x_dim],
                               nout=x2s_dim,
+                              unit='relu',
+                              init_W=init_W,
+                              init_b=init_b)
+
+    y_1 = FullyConnectedLayer(name='y_1',
+                              parent=['y_t'],
+                              parent_dim=[y_dim],
+                              nout=y2s_dim,
                               unit='relu',
                               init_W=init_W,
                               init_b=init_b)
@@ -158,8 +163,8 @@ def main(args):
                init_b=init_b)
 
     phi_1 = FullyConnectedLayer(name='phi_1',
-                                parent=['x_1', 's_tm1'],
-                                parent_dim=[x2s_dim, rnn_dim],
+                                parent=['x_1', 's_tm1','y_1'],
+                                parent_dim=[x2s_dim, rnn_dim,y2s_dim],
                                 nout=q_z_dim,
                                 unit='relu',
                                 init_W=init_W,
@@ -257,7 +262,7 @@ def main(args):
                                  init_b=init_b)
 
     nodes = [rnn,
-             x_1, z_1, #dissag_pred,
+             x_1, y_1, z_1, #dissag_pred,
              phi_1, phi_mu, phi_sig,
              prior_1, prior_mu, prior_sig,
              theta_1, theta_mu, theta_sig, coeff]#, corr, binary
@@ -266,23 +271,17 @@ def main(args):
 
     for node in nodes:
         if node.initialize() is not None:
-            params.update(node.initialize())#Creates matrices
+            params.update(node.initialize())
 
-    params = init_tparams(params)#Make the parameters theano.shared
+    params = init_tparams(params)
 
-    s_0_tr = rnn.get_init_state(batch_size)
-    s_0_val = T.zeros((batch_size, 2*rnn_dim), dtype=theano.config.floatX)
-    s_0_val = T.unbroadcast(s_0_val, *range(s_0_val.ndim))#[0,1] this is to raise an error if length of dimensions are not 1
+    s_0 = rnn.get_init_state(batch_size)
 
-    #x_1_temp = x_1.fprop([x], params)
+    x_1_temp = x_1.fprop([x], params)
+    y_1_temp = y_1.fprop([y], params)
 
-    def inner_val_fn(s_tm1):
+    def inner_fn_val(x_t, s_tm1):
 
-        '''
-        phi_1_t = phi_1.fprop([x_t, s_tm1], params)
-        phi_mu_t = phi_mu.fprop([phi_1_t], params)
-        phi_sig_t = phi_sig.fprop([phi_1_t], params)
-        '''
         prior_1_t = prior_1.fprop([s_tm1], params)
         prior_mu_t = prior_mu.fprop([prior_1_t], params)
         prior_sig_t = prior_sig.fprop([prior_1_t], params)
@@ -293,29 +292,31 @@ def main(args):
         theta_1_t = theta_1.fprop([z_1_t, s_tm1], params)
         theta_mu_t = theta_mu.fprop([theta_1_t], params)
         theta_sig_t = theta_sig.fprop([theta_1_t], params)
+
         coeff_t = coeff.fprop([theta_1_t], params)
-        
-        x_t = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
-        x_1_t = x_1.fprop([x_t], params)
+        #corr_t = corr.fprop([theta_1_t], params)
+        #binary_t = binary.fprop([theta_1_t], params)
 
-        s_t = rnn.fprop([[x_1_t, z_1_t], [s_tm1]], params)
+        pred = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
+        s_t = rnn.fprop([[x_t, z_1_t], [s_tm1]], params)
+        #y_pred = dissag_pred.fprop([s_t], params)
 
-        return s_t, x_t,  z_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t
-        # prior_mu_temp_val, prior_sig_temp_val
-    ((s_temp_val, prediction_val, z_t_temp_val, theta_1_temp_val, theta_mu_temp_val, theta_sig_temp_val, coeff_temp_val), updates_val) =\
-        theano.scan(fn=inner_val_fn , n_steps=n_steps, #already 1 subtracted if doing next step
-                    outputs_info=[s_0_val, None, None,  None, None, None, None])
+        return s_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
+        #corr_temp, binary_temp
+    ((s_temp_val, prior_mu_temp_val, prior_sig_temp_val, z_t_temp_val, z_1_temp_val, theta_1_temp_val, theta_mu_temp_val, theta_sig_temp_val, coeff_temp_val, prediction_val), updates_val) =\
+        theano.scan(fn=inner_fn_val,
+                    sequences=[x_1_temp],
+                    outputs_info=[s_0, None, None, None, None, None, None,  None, None, None])
 
-    
     for k, v in updates_val.iteritems():
         k.default_update = v
-    
-    def inner_train_fn(x_t, s_tm1):
-        x_1_t = x_1.fprop([x_t], params)
-        phi_1_t = phi_1.fprop([x_1_t, s_tm1], params)
+
+    def inner_fn_train(x_t, y_t, s_tm1):
+
+        phi_1_t = phi_1.fprop([x_t, s_tm1,y_t], params)
         phi_mu_t = phi_mu.fprop([phi_1_t], params)
         phi_sig_t = phi_sig.fprop([phi_1_t], params)
-        
+
         prior_1_t = prior_1.fprop([s_tm1], params)
         prior_mu_t = prior_mu.fprop([prior_1_t], params)
         prior_sig_t = prior_sig.fprop([prior_1_t], params)
@@ -332,22 +333,21 @@ def main(args):
         #binary_t = binary.fprop([theta_1_t], params)
 
         pred = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
-        s_t = rnn.fprop([[x_1_t, z_1_t], [s_tm1]], params)
+        s_t = rnn.fprop([[x_t, z_1_t], [s_tm1]], params)
         #y_pred = dissag_pred.fprop([s_t], params)
 
         return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
         #corr_temp, binary_temp
-
     ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp,z_t_temp, z_1_temp, theta_1_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
-        theano.scan(fn=inner_train_fn, sequences=[inputX],#[x_1_temp],
-                    outputs_info=[s_0_tr, None, None, None, None, None, None,  None, None, None, None, None])
+        theano.scan(fn=inner_fn_train,
+                    sequences=[x_1_temp, y_1_temp],
+                    outputs_info=[s_0, None, None, None, None, None, None,  None, None, None, None, None])
 
-
+    
     for k, v in updates.iteritems():
         k.default_update = v
-
-    #########   TRAINING GRAPH  #########
-    s_temp = concatenate([s_0_tr[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
+    
+    s_temp = concatenate([s_0[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
 
     s_temp.name = 'h_1'#gisse
     z_1_temp.name = 'z_1'#gisse
@@ -356,22 +356,32 @@ def main(args):
     theta_sig_temp.name = 'theta_sig_temp'
     coeff_temp.name = 'coeff'
 
-    prediction.name = 'pred_'+str(flgAgg)
-    mse = T.mean((prediction - targetX)**2) # As axis = None is calculated for all
-    mae = T.mean( T.abs_(prediction - targetX) )
-    mse.name = 'mse'
-    mae.name = 'mae'
-    x_in = inputX.reshape((batch_size*n_steps,-1))
+    if (flgAgg == -1 ):
+      prediction.name = 'x_reconstructed'
+      mse = T.mean((prediction - x)**2) # CHECK RESHAPE with an assertion
+      mae = T.mean( T.abs(prediction - x) )
+      mse.name = 'mse'
+      pred_in = x.reshape((x_shape[0]*x_shape[1], -1))
+    else:
+      prediction.name = 'pred_'+str(flgAgg)
+      mse = T.mean((prediction - y)**2) # As axis = None is calculated for all
+      mae = T.mean( T.abs_(prediction - y) )
+      mse.name = 'mse'
+      mae.name = 'mae'
+      pred_in = y.reshape((y.shape[0]*y.shape[1],-1))
 
     kl_temp = KLGaussianGaussian(phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp)
 
-    target_shape = x[:,1:].shape
-    theta_mu_in = theta_mu_temp.reshape((batch_size*n_steps, -1))
-    theta_sig_in = theta_sig_temp.reshape((batch_size*n_steps, -1))
-    coeff_in = coeff_temp.reshape((batch_size*n_steps, -1))
+    x_shape = x.shape
+    
+    theta_mu_in = theta_mu_temp.reshape((x_shape[0]*x_shape[1], -1))
+    theta_sig_in = theta_sig_temp.reshape((x_shape[0]*x_shape[1], -1))
+    coeff_in = coeff_temp.reshape((x_shape[0]*x_shape[1], -1))
+    #corr_in = corr_temp.reshape((x_shape[0]*x_shape[1], -1))
+    #binary_in = binary_temp.reshape((x_shape[0]*x_shape[1], -1))
 
-    recon = GMM(x_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
-    recon = recon.reshape((batch_size,n_steps))
+    recon = GMM(pred_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
+    recon = recon.reshape((x_shape[0], x_shape[1]))
     recon.name = 'gmm_out'
 
     recon_term = recon.sum(axis=0).mean()
@@ -385,40 +395,26 @@ def main(args):
       nll_upper_bound = nll_upper_bound + mse
     nll_upper_bound.name = 'nll_upper_bound'
 
-
-    #########   TESTING GRAPH  #########
-    s_temp_val = concatenate([s_0_val[None, :, :], s_temp_val[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
-
-    s_temp_val.name = 'h_1_val'#gisse
-    #z_1_temp_val.name = 'z_1_val'#gisse
-    z_t_temp_val.name = 'z_val'
-    theta_mu_temp_val.name = 'theta_mu_temp_val'
-    theta_sig_temp_val.name = 'theta_sig_temp_val'
-    coeff_temp_val.name = 'coeff_val'
-
-    prediction_val.name = 'generated_'+str(flgAgg)
-    mse_val = T.mean((prediction_val - targetX)**2) # As axis = None is calculated for all
-    mae_val = T.mean( T.abs_(prediction_val - targetX) )
+    ######################## VALIDATION TIME
+    prediction_val.name = 'generated__'+str(flgAgg)
+    mse_val = T.mean((prediction_val - y)**2) # As axis = None is calculated for all
+    mae_val = T.mean( T.abs_(prediction_val - y) )
     mse_val.name = 'mse_val'
     mae_val.name = 'mae_val'
-    x_in_val = inputX.reshape((batch_size*n_steps, -1))
+    pred_in_val = y.reshape((y.shape[0]*y.shape[1],-1))
 
-    # No sense in calculate distance to a distribution because we are not calculating phi
-    #kl_temp_val = KLGaussianGaussian(phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp)
+    theta_mu_in_val = theta_mu_temp_val.reshape((x_shape[0]*x_shape[1], -1))
+    theta_sig_in_val = theta_sig_temp_val.reshape((x_shape[0]*x_shape[1], -1))
+    coeff_in_val = coeff_temp_val.reshape((x_shape[0]*x_shape[1], -1))
 
-    theta_mu_in_val = theta_mu_temp_val.reshape((batch_size*n_steps, -1))
-    theta_sig_in_val = theta_sig_temp_val.reshape((batch_size*n_steps, -1))
-    coeff_in_val = coeff_temp_val.reshape((batch_size*n_steps, -1))
-
-    recon_val = GMM(x_in_val, theta_mu_in_val, theta_sig_in_val, coeff_in_val)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
-    recon_val = recon_val.reshape((batch_size,n_steps))
+    recon_val = GMM(pred_in_val, theta_mu_in_val, theta_sig_in_val, coeff_in_val)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
+    recon_val = recon_val.reshape((x_shape[0], x_shape[1]))
     recon_val.name = 'gmm_out_val'
 
-    recon_term_val = recon_val.sum(axis=0).mean()
+    recon_term_val= recon.sum(axis=0).mean()
     recon_term_val.name = 'recon_term_val'
-    
-    ######################################
-    model.inputs = [x, mask]
+
+    model.inputs = [x, mask, y, y_mask]
     model.params = params
     model.nodes = nodes
 
@@ -426,16 +422,15 @@ def main(args):
         lr=lr
     )
 
-    header ="epoch,log,kl,nll,mse,mae\n"
-
+    header = "epoch,log,kl,nll_upper_bound,mse,mae\n"
     extension = [
         GradientClipping(batch_size=batch_size),
-        EpochCount(epoch,save_path,header),
+        EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
-                   ddout=[recon_term_val, mse_val, mae_val, prediction_val, theta_mu_temp_val],
+                   ddout=[recon_term_val, mse_val, mae_val,
+                          theta_mu_temp_val, z_t_temp_val, prediction_val,s_temp_val],
                    indexSep=3,
-                   indexDDoutPlot = [(0,prediction_val)],
-                   instancesPlot = instancesPlot,#, 80,150
+                   instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
                    data=[Iterator(valid_data, batch_size)],
                    savedFolder = save_path),
         Picklize(freq=monitoring_freq, path=save_path),
@@ -457,11 +452,10 @@ def main(args):
 
     )
     mainloop.run()
-
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
-    header ="epoch,log,mse,mae\n"
+    header = "epoch,log,mse,mae\n"
     fLog.write(header)
     for i , item in enumerate(mainloop.trainlog.monitor['recon_term_val']):
       f = mainloop.trainlog.monitor['epoch'][i]
@@ -478,7 +472,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         config_file_name = sys.argv[-1]
     else:
-        config_file_name = 'config_generation.txt'
+        config_file_name = 'config_AEprior.txt'
 
     f = open(config_file_name, 'r')
     lines = f.readlines()
@@ -491,8 +485,8 @@ if __name__ == "__main__":
         param_value = param_list[1]
         params[param_name] = param_value
 
-    params['save_path'] = params['save_path']+'/gmm_gen'+params['genCase']+'/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
+    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
     os.makedirs(params['save_path'])
-    shutil.copy('config_generation.txt', params['save_path']+'/config_generation.txt')
+    shutil.copy('config_AEprior.txt', params['save_path']+'/config_AEprior.txt')
 
     main(params)

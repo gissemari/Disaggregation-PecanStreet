@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 import pickle
-from sklearn import preprocessing
 import matplotlib.pyplot as plt
 import os
+import datetime
 from sklearn import preprocessing
 
 
@@ -24,6 +24,8 @@ class ReaderTS(object):
         self.flgScaling = flgScaling
         self.flgAggSumScaled = flgAggSumScaled
         self.flgFilterZeros = flgFilterZeros
+        self.bin_edges = None
+        self.idxFiltered = []
         assert (trainPer+valPer+testPer) == 1
         
     def rnn_data( self, data, idxStart, idxEnd, apps, stride, labels=False):
@@ -108,7 +110,8 @@ class ReaderTS(object):
                                                 Suming up aggregated from the scaled disaggregated
         '''
         indexVal, indexTest, indexEnd = self.calculate_split(dataBuild)
-        
+        print("Indexes: ",indexVal, indexTest, indexEnd)
+        self.bin_edges = np.array([0,indexVal, indexTest, indexEnd])
         #Split and sum as if there was no specific appliance selected
         train_y, val_y, test_y = self.split_data(dataBuild, indexVal, indexTest, indexEnd, self.listAppliances)
 
@@ -117,7 +120,7 @@ class ReaderTS(object):
         val_x   = np.sum(val_y, axis=2)
         test_x  = np.sum(test_y, axis=2)
 
-        print(train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
+        print("Shapes before filtering ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
             
         if (numApp != -1):# if one specific appliance is selected
             #plt.figure(1)
@@ -127,7 +130,6 @@ class ReaderTS(object):
             shapeX = [-1,self.time_steps]
 
             train_y, val_y, test_y = train_y[:,:,numApp], val_y[:,:,numApp], test_y[:,:,numApp]
-            print(train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
             #Filtering zeros of specific appliance and respective aggregated instance
             if (self.flgFilterZeros==1):
                 train_y, idxTrain = self.filtering_zeros(train_y)
@@ -140,11 +142,12 @@ class ReaderTS(object):
 
             #Scaling
             lenApps=1
-            print(train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
+            
             train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
             if (self.flgAggSumScaled==1):
                 pass # See the way to scale all x sets with respect to train_y
             train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
+            print("Shapes after filtering for one app ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
 
         else:
             lenApps = len(self.listAppliances)
@@ -171,11 +174,11 @@ class ReaderTS(object):
                 test_x  = np.sum(test_y, axis=2)
             else:
                 train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
-
+            print("Shapes after filtering all at once ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
         return [train_x, val_x, test_x, train_y, val_y, test_y]
 
 
-    def load_csvdata(self, fileName, numApp):#appliances, filename, self.sample_period, windows
+    def load_csvdata(self, path, numApp):#appliances, filename, self.sample_period, windows
         '''
         Parameters:
             fileName
@@ -184,13 +187,9 @@ class ReaderTS(object):
         Returns:
             totalX, totalY two dictionaries with the split of the X and Y in training, validation and testing
         '''        
-        pos = fileName.rfind("/")+1
-        cwd=os.getcwd()
-        isDataPort = True
         #homes = ["2859","3413","6990","7951","8292"] # collection of home id availables
         #home = homes[0]
         isMinutes = True
-        path = fileName[:pos]
         lenApps = len(self.listAppliances)
         shapeY = [0,self.time_steps,lenApps] # (batch, seqLen, apps)
         
@@ -221,9 +220,9 @@ class ReaderTS(object):
                     imagepath=path+"dataid_{}_minute.h5".format(building_i) 
                 else:
                     imagepath=path+"dataid_{}_hour.h5".format(building_i)
-                print(imagepath)
+                #print(imagepath)
                 imagearray  = pd.HDFStore(imagepath)
-                print imagearray.keys()
+                #print imagearray.keys()
                 data=imagearray['df']
                 data = data.loc[data.index < window[1]]
                 data = data.loc[data.index > window[0]]
@@ -234,7 +233,7 @@ class ReaderTS(object):
             totalY['train'] = np.concatenate((totalY['train'], allSetsBuild[3]),axis=0)
             totalY['val'] = np.concatenate((totalY['val'], allSetsBuild[4]),axis=0)
             totalY['test'] = np.concatenate((totalY['test'], allSetsBuild[5]),axis=0)
-            print(totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
+            print("One more building ", totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
 
             if (flgNewLoad==1):
                 with open(path+"/pickles/"+truFileName+"_X.pickle",'wb') as fX:
@@ -247,3 +246,51 @@ class ReaderTS(object):
         print(totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
         print(data.dtypes)
         return totalX, totalY
+
+    def build_dict_instances_plot(self,listDates, sizeBatch, TestSize):
+      maxBatch = TestSize/sizeBatch  - 1
+      listInst = []
+      for strDate in listDates:#list range of dates per building. save some where the indexes of the total dataSet per building
+        initialDate = datetime.datetime.strptime(self.windows[1][0], '%Y-%m-%d')
+        targetDate = datetime.datetime.strptime(strDate, '%Y-%m-%d %H:%M')
+        nInstance = (targetDate - initialDate).total_seconds()/6
+        listInst.append(nInstance)
+
+      instancesPlot = {}
+      tupBinsOffset = []
+      print(listInst)
+      for inst in listInst:
+        print(self.bin_edges)
+        if (self.bin_edges[2]< inst and inst<self.bin_edges[3]): # If the instance is in the test set
+          offSet = int((inst - self.bin_edges[2])/self.time_steps)
+          tupBinsOffset.append((2,offSet))
+      print(tupBinsOffset)
+      dictInstances = {}
+      for tupIns in tupBinsOffset:
+        smallerIndexes = np.array(self.idxFiltered[tupIns[0]]) #Convert the indexs (tuples) in an array
+        tupNumberSmaller = np.where(smallerIndexes<tupIns[1]) #Find the number of indexes that are smaller than the offset
+        indexAfterFilter = len(tupNumberSmaller[0])
+        nBatch = int(indexAfterFilter/sizeBatch) - 1
+        indexAfterBatch =  (indexAfterFilter % sizeBatch) -1
+        if (nBatch <= maxBatch):
+          if nBatch in dictInstances:
+            dictInstances[nBatch].append(int(indexAfterBatch))
+          else:
+            dictInstances[nBatch] = [int(indexAfterBatch)]
+      print(dictInstances)
+      return dictInstances
+
+'''
+appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
+windows = {2859:("2015-01-01", "2015-12-31"),6990:("2015-01-01", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
+reader = ReaderTS(windows, appliances,600,1,600,6,flgAggSumScaled=1, flgFilterZeros = 1, 
+                    flgScaling=1, trainPer=0.5, valPer=0.25, testPer=0.25)
+building = reader.load_csvdata('/home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/datasets/',2)
+
+imagearray  = pd.HDFStore('/home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/datasets/dataid_2859_minute.h5')
+data=imagearray['df']
+
+for i in appliances
+    plt.figure(1)
+    plt.plot(data[i][])
+'''

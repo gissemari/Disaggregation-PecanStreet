@@ -76,12 +76,12 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
     Deleting huge part of seems like generating data from other metadata
     '''
     reader = dt.ReaderTS(windows, appliances, n_steps, stride_train, stride_test, period, flgAggSumScaled, flgFilterZeros,
-                        flgScaling=1, trainPer=0.5, valPer=0.25, testPer=0.25)
+                        flgScaling=0, trainPer=0.5, valPer=0.25, testPer=0.25)
 
     XdataSet, YdataSet = reader.load_csvdata(data_path, numApps)
     #shape before: batch, apps, steps
     x_train, x_test, y_train, y_test = XdataSet['train'],XdataSet['test'],YdataSet['train'],YdataSet['test']
 
     if (numApps==-1):
-        return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_test,axis=2), y_test  
-    return np.expand_dims(x_train,axis=2), np.expand_dims(y_train,axis=2), np.expand_dims(x_test,axis=2), np.expand_dims(y_test,axis=2)
+        return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_test,axis=2), y_test, reader  
+    return np.expand_dims(x_train,axis=2), np.expand_dims(y_train,axis=2), np.expand_dims(x_test,axis=2), np.expand_dims(y_test,axis=2), reader
