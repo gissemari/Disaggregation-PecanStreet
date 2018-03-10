@@ -31,7 +31,8 @@ from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {2859:("2015-01-01", "2015-12-31"),6990:("2015-01-01", "2015-12-31"),7951:("2015-01-01", "2015-12-31"),8292:("2015-01-01", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
+windows = {2859:("2015-01-01", "2015-12-31"),6990:("2015-01-01", "2015-12-31"),7951:("2015-01-01", "2015-12-31"),8292:("2015-01-01", "2015-12-31"), 3413:("2015-01-01", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
+listDates = {2859:['2015-08-26 07:57'],6990:['2015-10-15 08:18']}
 
 def main(args):
     
@@ -40,7 +41,7 @@ def main(args):
 
     trial = int(args['trial'])
     pkl_name = 'vrnn_gmm_%d' % trial
-    channel_name = 'nll_upper_bound'#NOT FOUND ANYWHERE valid_nll_upper_bound
+    channel_name = 'nll_upper_bound'
 
     data_path = args['data_path']
     save_path = args['save_path'] #+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")
@@ -69,11 +70,12 @@ def main(args):
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
 
-    q_z_dim = 100#150
-    p_z_dim = 60#150
-    p_x_dim = 20#250
-    x2s_dim = 40#250
-    z2s_dim = 40#150
+    q_z_dim = 80#150
+    p_z_dim = 80#150
+    p_x_dim = 50#250
+    x2s_dim = 50#250
+    y2s_dim = 50
+    z2s_dim = 50#150
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
@@ -81,7 +83,7 @@ def main(args):
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = instancesPlot = {0:[10,20], 2:[20,30]} 
+    instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
@@ -109,6 +111,7 @@ def main(args):
     init_b_sig = InitCell('const', mean=0.6)
 
     x, mask, y , y_mask = train_data.theano_vars()
+ 
     x.name = 'x_original'
     if debug:
         x.tag.test_value = np.zeros((15, batch_size, x_dim), dtype=np.float32)
@@ -120,6 +123,14 @@ def main(args):
                               parent=['x_t'],
                               parent_dim=[x_dim],
                               nout=x2s_dim,
+                              unit='relu',
+                              init_W=init_W,
+                              init_b=init_b)
+
+    y_1 = FullyConnectedLayer(name='y_1',
+                              parent=['y_t'],
+                              parent_dim=[y_dim],
+                              nout=y2s_dim,
                               unit='relu',
                               init_W=init_W,
                               init_b=init_b)
@@ -141,18 +152,9 @@ def main(args):
                init_U=init_U,
                init_b=init_b)
 
-    '''
-    dissag_pred = FullyConnectedLayer(name='disag_1',
-                                  parent=['s_tm1'],
-                                  parent_dim=[rnn_dim],
-                                  nout=num_apps,
-                                  unit='relu',
-                                  init_W=init_W,
-                                  init_b=init_b)
-    '''
     phi_1 = FullyConnectedLayer(name='phi_1',
-                                parent=['x_1', 's_tm1'],
-                                parent_dim=[x2s_dim, rnn_dim],
+                                parent=['x_1', 's_tm1','y_1'],
+                                parent_dim=[x2s_dim, rnn_dim,y2s_dim],
                                 nout=q_z_dim,
                                 unit='relu',
                                 init_W=init_W,
@@ -250,7 +252,7 @@ def main(args):
                                  init_b=init_b)
 
     nodes = [rnn,
-             x_1, z_1, #dissag_pred,
+             x_1, y_1, z_1, #dissag_pred,
              phi_1, phi_mu, phi_sig,
              prior_1, prior_mu, prior_sig,
              theta_1, theta_mu, theta_sig, coeff]#, corr, binary
@@ -266,11 +268,11 @@ def main(args):
     s_0 = rnn.get_init_state(batch_size)
 
     x_1_temp = x_1.fprop([x], params)
+    y_1_temp = y_1.fprop([y], params)
 
+    def inner_fn_train(x_t, y_t, s_tm1):
 
-    def inner_fn(x_t, s_tm1):
-
-        phi_1_t = phi_1.fprop([x_t, s_tm1], params)
+        phi_1_t = phi_1.fprop([x_t, s_tm1,y_t], params)
         phi_mu_t = phi_mu.fprop([phi_1_t], params)
         phi_sig_t = phi_sig.fprop([phi_1_t], params)
 
@@ -296,8 +298,8 @@ def main(args):
         return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
         #corr_temp, binary_temp
     ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp,z_t_temp, z_1_temp, theta_1_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
-        theano.scan(fn=inner_fn,
-                    sequences=[x_1_temp],
+        theano.scan(fn=inner_fn_train,
+                    sequences=[x_1_temp, y_1_temp],
                     outputs_info=[s_0, None, None, None, None, None, None,  None, None, None, None, None])
 
     
@@ -305,14 +307,6 @@ def main(args):
         k.default_update = v
     
     s_temp = concatenate([s_0[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
-    '''
-    theta_1_temp = theta_1.fprop([z_1_temp, s_temp], params)
-    theta_mu_temp = theta_mu.fprop([theta_1_temp], params)
-    theta_sig_temp = theta_sig.fprop([theta_1_temp], params)
-    coeff_temp = coeff.fprop([theta_1_temp], params)
-    corr_temp = corr.fprop([theta_1_temp], params)
-    binary_temp = binary.fprop([theta_1_temp], params)
-    '''
 
     s_temp.name = 'h_1'#gisse
     z_1_temp.name = 'z_1'#gisse
@@ -320,8 +314,7 @@ def main(args):
     theta_mu_temp.name = 'theta_mu_temp'
     theta_sig_temp.name = 'theta_sig_temp'
     coeff_temp.name = 'coeff'
-    #corr_temp.name = 'corr'
-    #binary_temp.name = 'binary'
+
     if (flgAgg == -1 ):
       prediction.name = 'x_reconstructed'
       mse = T.mean((prediction - x)**2) # CHECK RESHAPE with an assertion
@@ -330,7 +323,6 @@ def main(args):
       pred_in = x.reshape((x_shape[0]*x_shape[1], -1))
     else:
       prediction.name = 'pred_'+str(flgAgg)
-      #[:,:,flgAgg].reshape((y.shape[0],y.shape[1],1)
       mse = T.mean((prediction - y)**2) # As axis = None is calculated for all
       mae = T.mean( T.abs_(prediction - y) )
       mse.name = 'mse'
@@ -350,13 +342,9 @@ def main(args):
     recon = GMM(pred_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
     recon = recon.reshape((x_shape[0], x_shape[1]))
     recon.name = 'gmm_out'
-    
-    #recon = recon * mask
-    
+
     recon_term = recon.sum(axis=0).mean()
     recon_term.name = 'recon_term'
-
-    #kl_temp = kl_temp * mask
     
     kl_term = kl_temp.sum(axis=0).mean()
     kl_term.name = 'kl_term'
@@ -366,50 +354,6 @@ def main(args):
       nll_upper_bound = nll_upper_bound + mse
     nll_upper_bound.name = 'nll_upper_bound'
 
-    max_x = x.max()
-    mean_x = x.mean()
-    min_x = x.min()
-    max_x.name = 'max_x'
-    mean_x.name = 'mean_x'
-    min_x.name = 'min_x'
-
-    max_theta_mu = theta_mu_in.max()
-    mean_theta_mu = theta_mu_in.mean()
-    min_theta_mu = theta_mu_in.min()
-    max_theta_mu.name = 'max_theta_mu'
-    mean_theta_mu.name = 'mean_theta_mu'
-    min_theta_mu.name = 'min_theta_mu'
-
-    max_theta_sig = theta_sig_in.max()
-    mean_theta_sig = theta_sig_in.mean()
-    min_theta_sig = theta_sig_in.min()
-    max_theta_sig.name = 'max_theta_sig'
-    mean_theta_sig.name = 'mean_theta_sig'
-    min_theta_sig.name = 'min_theta_sig'
-
-    coeff_max = coeff_in.max()
-    coeff_min = coeff_in.min()
-    coeff_mean_max = coeff_in.mean(axis=0).max()
-    coeff_mean_min = coeff_in.mean(axis=0).min()
-    coeff_max.name = 'coeff_max'
-    coeff_min.name = 'coeff_min'
-    coeff_mean_max.name = 'coeff_mean_max'
-    coeff_mean_min.name = 'coeff_mean_min'
-
-    max_phi_sig = phi_sig_temp.max()
-    mean_phi_sig = phi_sig_temp.mean()
-    min_phi_sig = phi_sig_temp.min()
-    max_phi_sig.name = 'max_phi_sig'
-    mean_phi_sig.name = 'mean_phi_sig'
-    min_phi_sig.name = 'min_phi_sig'
-
-    max_prior_sig = prior_sig_temp.max()
-    mean_prior_sig = prior_sig_temp.mean()
-    min_prior_sig = prior_sig_temp.min()
-    max_prior_sig.name = 'max_prior_sig'
-    mean_prior_sig.name = 'mean_prior_sig'
-    min_prior_sig.name = 'min_prior_sig'
-
     model.inputs = [x, mask, y, y_mask]
     model.params = params
     model.nodes = nodes
@@ -418,17 +362,14 @@ def main(args):
         lr=lr
     )
 
-    header ="epoch,log,kl,nll,mse,mae\n"
-
+    header = "epoch,log,kl,nll_upper_bound,mse,mae\n"
     extension = [
         GradientClipping(batch_size=batch_size),
-        EpochCount(epoch,save_path,header),
+        EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
                    ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
-                          theta_mu_temp, theta_sig_temp, z_t_temp, prediction,#corr_temp, binary_temp, 
-                          s_temp, z_1_temp],
+                          theta_mu_temp, z_t_temp, prediction,s_temp],
                    indexSep=5,
-                   indexDDoutPlot = [(0,theta_mu_temp), (2, z_t_temp), (3,prediction)],
                    instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
                    data=[Iterator(valid_data, batch_size)],
                    savedFolder = save_path),
@@ -437,7 +378,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 20:(lr/10)}
+    lr_iterations = {0:lr}
 
     mainloop = Training(
         name=pkl_name,
@@ -445,21 +386,25 @@ def main(args):
         model=model,
         optimizer=optimizer,
         cost=nll_upper_bound,
-        outputs=[nll_upper_bound, recon_term, kl_term,mse, mae ],
+        outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
         extension=extension,
         lr_iterations=lr_iterations
 
     )
     mainloop.run()
     fLog = open(save_path+'/output.csv', 'w')
-    fLog.write("log,kl,nll_upper_bound,mse,mae\n")
-    for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
+    fLog.write(str(lr_iterations)+"\n")
+    fLog.write(str(windows)+"\n")
+    fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
+    fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
+    header = "epoch,log,mse,mae\n"
+    fLog.write(header)
+    for i , item in enumerate(mainloop.trainlog.monitor['recon_term']):
+      f = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
-      b = mainloop.trainlog.monitor['kl_term'][i]
-      c = mainloop.trainlog.monitor['nll_upper_bound'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{},{},{},{},{}\n".format(a,b,c,d,e))
+      fLog.write("{},{},{},{}\n".format(f,a,d,e))
     
 
 
@@ -469,7 +414,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         config_file_name = sys.argv[-1]
     else:
-        config_file_name = 'config.txt'
+        config_file_name = 'config_AE.txt'
 
     f = open(config_file_name, 'r')
     lines = f.readlines()
@@ -482,8 +427,8 @@ if __name__ == "__main__":
         param_value = param_list[1]
         params[param_name] = param_value
 
-    params['save_path'] = params['save_path']+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")
+    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
     os.makedirs(params['save_path'])
-    shutil.copy('config.txt', params['save_path']+'/config.txt')
+    shutil.copy('config_AE.txt', params['save_path']+'/config_AE.txt')
 
     main(params)

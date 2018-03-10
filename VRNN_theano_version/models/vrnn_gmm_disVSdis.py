@@ -32,6 +32,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
 windows = {2859:("2015-01-01", "2015-12-31"),6990:("2015-01-01", "2015-12-31"),7951:("2015-01-01", "2015-12-31"),8292:("2015-01-01", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
+listDates = {2859:['2015-08-26 07:57'],6990:['2015-10-15 08:18']}
 
 def main(args):
     
@@ -40,7 +41,7 @@ def main(args):
 
     trial = int(args['trial'])
     pkl_name = 'vrnn_gmm_%d' % trial
-    channel_name = 'nll_upper_bound'#NOT FOUND ANYWHERE valid_nll_upper_bound
+    channel_name = 'nll_upper_bound'
 
     data_path = args['data_path']
     save_path = args['save_path'] #+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")
@@ -81,14 +82,14 @@ def main(args):
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = instancesPlot = {0:[10,20], 2:[20,30]} 
+    instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
                          cond=True,# False
                          #path=data_path,
-                         inputX=Xtrain,
-                         labels=ytrain)
+                         inputX=ytrain ,
+                         labels=Xtrain)
 
     X_mean = train_data.X_mean
     X_std = train_data.X_std
@@ -99,8 +100,8 @@ def main(args):
                          #path=data_path,
                          X_mean=X_mean,
                          X_std=X_std,
-                         inputX=Xval,
-                         labels = yval)
+                         inputX=yval,
+                         labels = Xval)
 
 
     init_W = InitCell('rand')
@@ -320,22 +321,13 @@ def main(args):
     theta_mu_temp.name = 'theta_mu_temp'
     theta_sig_temp.name = 'theta_sig_temp'
     coeff_temp.name = 'coeff'
-    #corr_temp.name = 'corr'
-    #binary_temp.name = 'binary'
-    if (flgAgg == -1 ):
-      prediction.name = 'x_reconstructed'
-      mse = T.mean((prediction - x)**2) # CHECK RESHAPE with an assertion
-      mae = T.mean( T.abs(prediction - x) )
-      mse.name = 'mse'
-      pred_in = x.reshape((x_shape[0]*x_shape[1], -1))
-    else:
-      prediction.name = 'pred_'+str(flgAgg)
-      #[:,:,flgAgg].reshape((y.shape[0],y.shape[1],1)
-      mse = T.mean((prediction - y)**2) # As axis = None is calculated for all
-      mae = T.mean( T.abs_(prediction - y) )
-      mse.name = 'mse'
-      mae.name = 'mae'
-      pred_in = y.reshape((y.shape[0]*y.shape[1],-1))
+    
+    prediction.name = 'pred_'+str(flgAgg)
+    mse = T.mean((prediction - x)**2) # As axis = None is calculated for all
+    mae = T.mean( T.abs_(prediction - x) )
+    mse.name = 'mse'
+    mae.name = 'mae'
+    x_in = x.reshape((batch_size*n_steps,-1))
 
     kl_temp = KLGaussianGaussian(phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp)
 
@@ -347,7 +339,7 @@ def main(args):
     #corr_in = corr_temp.reshape((x_shape[0]*x_shape[1], -1))
     #binary_in = binary_temp.reshape((x_shape[0]*x_shape[1], -1))
 
-    recon = GMM(pred_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
+    recon = GMM(x_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
     recon = recon.reshape((x_shape[0], x_shape[1]))
     recon.name = 'gmm_out'
     
@@ -418,11 +410,10 @@ def main(args):
         lr=lr
     )
 
-    header ="epoch,log,kl,nll,mse,mae\n"
-
+    header = "epoch,log,kl,nll_upper_bound,mse,mae\n"
     extension = [
         GradientClipping(batch_size=batch_size),
-        EpochCount(epoch,save_path,header),
+        EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
                    ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
                           theta_mu_temp, theta_sig_temp, z_t_temp, prediction,#corr_temp, binary_temp, 
@@ -437,7 +428,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 20:(lr/10)}
+    lr_iterations = {0:lr}
 
     mainloop = Training(
         name=pkl_name,
@@ -445,13 +436,17 @@ def main(args):
         model=model,
         optimizer=optimizer,
         cost=nll_upper_bound,
-        outputs=[nll_upper_bound, recon_term, kl_term,mse, mae ],
+        outputs=[nll_upper_bound],
         extension=extension,
         lr_iterations=lr_iterations
 
     )
     mainloop.run()
     fLog = open(save_path+'/output.csv', 'w')
+    fLog.write(str(lr_iterations)+"\n")
+    fLog.write(str(windows)+"\n")
+    fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim\n")
+    fLog.write("{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim))
     fLog.write("log,kl,nll_upper_bound,mse,mae\n")
     for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
       a = mainloop.trainlog.monitor['recon_term'][i]
