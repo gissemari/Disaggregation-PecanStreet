@@ -56,16 +56,15 @@ class ReaderTS(object):
         '''
         pRest = self.pVal + self.pTest
         completeInstances = len(data.index)
-        indexVal = int(round((self.pTrain*self.stride_input*(completeInstances - self.time_steps) +  
-                              pRest*self.stride_output*self.time_steps)/ 
-                                (pRest*self.stride_output + self.pTrain*self.stride_input)))
+        print(completeInstances)
+        indexVal = int(round((self.pTrain*self.stride_input*completeInstances / ( pRest*self.stride_output +self.pTrain*self.stride_input))))
         indexTest = int(indexVal + self.pVal*(completeInstances - indexVal)/pRest)
 
         #Sabina 50% - 25% - 25%
         return indexVal,indexTest,completeInstances
     
     def split_data(self, dataBuild, indexVal, indexTest, indexEnd,apps):
-        train_y = self.rnn_data(dataBuild, 0, indexVal, apps, self.stride_input, labels=True)
+        train_y = self.rnn_data(dataBuild, 0, (indexVal), apps, self.stride_input, labels=True)
         val_y   = self.rnn_data(dataBuild, indexVal, indexTest, apps, self.stride_output, labels=True)
         test_y  = self.rnn_data(dataBuild, indexTest, indexEnd, apps, self.stride_output, labels=True)
         return train_y, val_y, test_y
@@ -205,6 +204,7 @@ class ReaderTS(object):
 
         for building_i, window in self.windows.items():
             flgNewLoad = 0
+            print(building_i)
             try:
                 if (numApp!=-1):
                     truFileName=str(building_i)+'_'+self.listAppliances[numApp]+'_'+'_'+window[0]+'_'+window[1]#fileName[pos:]
