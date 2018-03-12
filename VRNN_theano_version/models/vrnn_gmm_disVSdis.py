@@ -449,12 +449,13 @@ def main(args):
     fLog.write("{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim))
     fLog.write("log,kl,nll_upper_bound,mse,mae\n")
     for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
+      f = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
       b = mainloop.trainlog.monitor['kl_term'][i]
       c = mainloop.trainlog.monitor['nll_upper_bound'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{},{},{},{},{}\n".format(a,b,c,d,e))
+      fLog.write("{},{},{},{},{},{}\n".format(f,a,b,c,d,e))
     
 
 
@@ -477,7 +478,7 @@ if __name__ == "__main__":
         param_value = param_list[1]
         params[param_name] = param_value
 
-    params['save_path'] = params['save_path']+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")
+    params['save_path'] = params['save_path']+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
     os.makedirs(params['save_path'])
     shutil.copy('config.txt', params['save_path']+'/config.txt')
 

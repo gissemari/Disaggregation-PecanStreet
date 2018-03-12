@@ -1,0 +1,67 @@
+Buildings:
+2859
+6990
+7951
+8292
+3413
+
+Appliances
+0-'air1'
+1-'furnace1'
+2-'refrigerator1'
+3-'clotheswasher1'
+4-'drye1'
+5-'dishwasher1'
+6-'kitchenapp1'
+7-'microwave1'
+
+Building: 2859
+- Air just from 2015-05 to 2015-11
+- Furnace not used in 2015-04 and part of 2015-05
+- Refrigerator much more used 2015-05
+- Clothwasher normal
+- Dryer normal
+- Dish Washer almost once a month
+- Kitchenapp just one outlier 0.09 in 2015-05
+- Microwave normal
+
+Building: 6990
+- Air just from 2015-04 to 2015-11
+- Furnace, few days not used 2015-02, 2015-03
+- Refrigerator, 2 short downs (not total) 2015-02 and 2015-08
+- Clothwasher pretty normal
+- Dryer pretty normal
+- DishWasher, few days not used in 2015-08
+- Kitchenapp, not too much used
+- Microwave, little not used in 2015-08
+
+Building: 7951
+- Air higher between 2015-04 to 2015-11, little rest
+- Furnace, higher use jan-march and from nov, little used in between
+- Refrigerator almost normal the whole year
+- Clothwasher, same pattern as furnace, maybe sth wrong.
+- Drye pretty normal
+- Dish washer pretty normal
+- KitchenApp a lot of use
+- Microwave pretty normal, low use btw 2015-09 to 2015-12
+
+Building: 8292
+- Air, higher btw 2015-04 to 2015-11
+- Furnace, just two downs (not total) btw 2015-03 and 2015-05
+- Refrigerator pretty normal
+- Clotheswasher pretty normal
+- Drye pretty normal
+- Dish washer pretty normal
+- Kitchenapp low betwenn 2015-03 to 2015-11
+- microwave pretty normal
+
+
+Building: 3413
+- Air greatest between 2015-03 to 2015-11
+- Furnace (weird)
+- Refrigerator pretty normal
+- clotheswasher1: pretty normal. After filtering, does not have any instance for training for app3
+- Drye pretty normal
+- Dish washer pretty normal
+- kitchen app pretty normal except for two slots where it seems 0 total
+- microwave pretty normal 
