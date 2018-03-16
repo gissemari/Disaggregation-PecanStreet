@@ -129,6 +129,7 @@ class ReaderTS(object):
 
             train_y, val_y, test_y = train_y[:,:,numApp], val_y[:,:,numApp], test_y[:,:,numApp]
             #Filtering zeros of specific appliance and respective aggregated instance
+
             if (self.flgFilterZeros==1):
                 train_y, idxTrain = self.filtering_zeros(train_y)
                 val_y, idxVal   = self.filtering_zeros(val_y)
@@ -137,6 +138,7 @@ class ReaderTS(object):
                 train_x = train_x[idxTrain]
                 val_x   = val_x[idxVal]
                 test_x  = test_x[idxTest]
+            print("Shapes after filtering for one app ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
 
             #Scaling
             lenApps=1
@@ -145,8 +147,7 @@ class ReaderTS(object):
             if (self.flgAggSumScaled==1):
                 pass # See the way to scale all x sets with respect to train_y
             train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
-            print("Shapes after filtering for one app ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
-
+            
         else:
             lenApps = len(self.listAppliances)
             shapeY = [-1,self.time_steps, lenApps]
