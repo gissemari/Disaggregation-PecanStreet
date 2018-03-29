@@ -16,34 +16,83 @@ Appliances
 7-'microwave1'
 
 Building: 2859
-- Air just from 2015-05 to 2015-11
-- Furnace not used in 2015-04 and part of 2015-05
-- Refrigerator much more used 2015-05
-- Clothwasher normal
-- Dryer normal
-- Dish Washer almost once a month
-- Kitchenapp just one outlier 0.09 in 2015-05
-- Microwave normal
+- Air (>0.5 - 20 minutes - OFF --> 0) just from 2015-05 to 2015-11
+	- checked at the beginning: 
+- Furnace (>0.3 - 120 minutes, 60 minutes, 30 minutes - 0FF --> 0.007) not used in 2015-04 and part of 2015-05
+	- Checked at the begining 2015-01-01. Found 120 and 30 minute sequences.
+	- Checked at the middle 2015-06-02. Found 60-minute sequences
+- Refrigerator (>0.1 - 20 minutes, 30 minutes - OFF --> 0.003) much more used 2015-05
+	- Checked at the beginning 2015-01-01. Found 20-minute sequences
+	- Checked at the middle, found 30-minute seq
+- Clothwasher normal (>0.1 - 80 minutes - OFF --> 0)
+	- Checked at the beginning 2015-01-02. Found 70 minutes
+	- Checked at the middle 2015-06-03. same length
+- Dryer normal (>1 - 80 minutes - OFF -->0)
+- Dish Washer (>0.2 - 130 minutes - OFF -->0) almost once a month. it starts at 2015-02-02
+	- checked in the middle, 120 minutes
+- Kitchenapp (>=0.003 - 20 minutes, 5 minutes, 60 minutes - OFF -->0,0.003) just one outlier 0.09 in 2015-05 and at the end
+	- Checked at the beggining: 0 - 0.003 20-minutes
+	- Checked at the middle: 5-minute, 60 minutes
+	- Seems like there are different appliances there
+- Microwave normal (>0.007 - 5 minutes - OFF-->0.008)
+	- Checked at the beggining: 5-minute
+	- Checked at the middle: 5-minute
+	- Should be good to find larger than 5 minutes and if count them
 
 Building: 6990
-- Air just from 2015-04 to 2015-11
-- Furnace, few days not used 2015-02, 2015-03
-- Refrigerator, 2 short downs (not total) 2015-02 and 2015-08
-- Clothwasher pretty normal
-- Dryer pretty normal
-- DishWasher, few days not used in 2015-08
-- Kitchenapp, not too much used
-- Microwave, little not used in 2015-08
+- Air (>0.1 - 10 minutes, 15 minutes - OFF ->0) just from 2015-04 to 2015-11
+	-Checked at the beggining: 10 minutes
+	-Checked at the middle: 15 minutes
+- Furnace (>0.5 - 10 minutes - OFF -> 0.011) few days not used 2015-02, 2015-03
+	- Checked at the beggining: 10 minutes
+	- Checked at the middle: 10 minutes
+- Refrigerator (>0.5 - 80 minutes, 50 minutes, 150 minutes - OFF -> 0.003, 0.004), 2 short downs (not total) 2015-02 and 2015-08
+	- checked at thte beggining: 80 minutes, 50 minutes. Why are there different and how many there are
+	- Checkec at the beginning; few 150 minutes
+- Clothwasher (>0.2 - 100 minutes - OFF ->0) pretty normal
+	- checked at the beginning: 80 minutes
+	- checked at the middle: 90 minutes
+- Dryer (>3 - 100 minutes - OFF->0) pretty normal
+	- checked at the beginning: 90 minutes
+	- Checked at the middle: 70 minutes
+- DishWasher (>0.6 130 minutes- OFF->0), few days not used in 2015-08
+	- Checked at the beginning: 120 minutes
+	- Checked at the middle: 120 minutes
+- Kitchenapp (>0.001 - 300 minutes to 5 minutes -  OFF->0), not too much used. #kitchenapp 0:489814 - 0.003:3602 - 0.004:3589
+	- Checked at the beginning: different seq length, blender? 300 minutes, 130 minutes, 5 minutes
+	- checked at the middle: 600 minutes, 
+- Microwave (>0.006 - 50 minutes, 10 minutes - OFF ->0.006), little not used in 2015-08
+	- Checked at the beginning: 50 minutes, 10 minutes
+	- Checked at the middle: 10 minutes, 5 minutes
 
 Building: 7951
-- Air higher between 2015-04 to 2015-11, little rest
-- Furnace, higher use jan-march and from nov, little used in between
-- Refrigerator almost normal the whole year
-- Clothwasher, same pattern as furnace, maybe sth wrong.
-- Drye pretty normal
-- Dish washer pretty normal
-- KitchenApp a lot of use
-- Microwave pretty normal, low use btw 2015-09 to 2015-12
+- Air (>0.2 - 20 minutes - OFF->0) higher between 2015-04 to 2015-11, little rest
+	- Checked at the beginning: 20 minutes
+	- checked at the middle: 20 minutes
+- Furnace (>0.1 - 40 minutes, 70 minutes- OFF->0, 0.003), higher use jan-march and from nov, little used in between
+	- #min furnace 0: 290440 - 0.003:126297 - 0.004:19317
+	- Seems like in the summer epoch it's very low
+	- Checked at the beginning: 40min, higher values like 5
+	- Checked at the middle: 70min, lower values like 0.150
+- Refrigerator (>0.004- 40 minutes, 30 mins - OFF->0.004) almost normal the whole year
+	- Checked at the beginning: 40 minuts, 30 minutes
+	- Checked at the middle: same
+- Clothwasher (), same pattern as furnace, maybe sth wrong.
+	- Not exactly same values but pretty pretty close
+- Drye (>0.04 - 200 min, 75 min SELECT THIS - OFF ->0) pretty normal
+	- Checked at the beginning: 200 mins (like 3 cycles all together)
+	- Checked at the middle: 75 minus (like just one cycle). This should be selected
+- Dish washer (>0.01 - 220 min - OFF ->0) pretty normal
+	- Checked at the beginning: 220 minutes
+	- Checked at the middle: 210 minutes
+- KitchenApp (>0.01 - 70, 15 minuts - OFF-> 0.003 SELECT THIS, 0.004, 0.005) a lot of use
+	- checked at the beginning: 70, 15 minutes
+	- checked at the middle: 70 mins, different peaks though
+	- #kitchenapp 0:80681 -  0.003:256992 - 0.004:117941 - 0.005:44326 - 0.006:602
+- Microwave (>0.01 - 240min, 60min, 20 min, 10mins - OFF-> 0, 0.003 ) pretty normal, low use btw 2015-09 to 2015-12
+	- #microwave 0:299730 0.003:19729
+	- checked at the beginning: 240, 60,20,10
+	- checked at the middle: 20, 
 
 Building: 8292
 - Air, higher btw 2015-04 to 2015-11
@@ -65,3 +114,7 @@ Building: 3413
 - Dish washer pretty normal
 - kitchen app pretty normal except for two slots where it seems 0 total
 - microwave pretty normal 
+
+############ CONCLUSIONS
+- First experiment each building separately
+- Do not use KITCHENNAPP, evaluate 2859-furnace and 6990-refrigerator
