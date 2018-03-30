@@ -71,14 +71,14 @@ def plot_lines_iamondb_example(X, y=None, equal=True, show=True, save=False,
         plt.savefig(save_name)
 
 
-def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, stride_train, stride_test, trainPer=0.5, valPer=0.25, testPer=0.25, flgAggSumScaled=0, flgFilterZeros=0):
+def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, stride_train, stride_test, trainPer=0.5, valPer=0.25, testPer=0.25, loadType=0, flgAggSumScaled=0, flgFilterZeros=0):
     '''
     Deleting huge part of seems like generating data from other metadata
     '''
     reader = dt.ReaderTS(windows, appliances, n_steps, stride_train, stride_test, period, flgAggSumScaled, flgFilterZeros,
                         flgScaling=0, trainPer=trainPer, valPer=valPer, testPer=testPer)
 
-    XdataSet, YdataSet = reader.load_csvdata(data_path, numApps)
+    XdataSet, YdataSet = reader.load_csvdata(data_path, numApps,loadType)
     #shape before: batch, apps, steps
     x_train, x_test, y_train, y_test = XdataSet['train'],XdataSet['test'],YdataSet['train'],YdataSet['test']
 

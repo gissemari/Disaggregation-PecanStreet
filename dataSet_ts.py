@@ -6,6 +6,10 @@ import os
 import datetime
 from sklearn import preprocessing
 
+offValues = {2859:{0:0.2,1:0.2,2:0.1,3:0.2,4:1,5:0,6:0.005,7:0.25},
+             6990:{0:1,1:0.3,2:0.1,3:0.2,4:2,5:0.5,6:0.1,7:0.05},
+             7951:{0:0.5,1:0.01,2:0.1,3:0.01,4:1,5:0.4,6:0.2,7:0.5}}
+
 class ReaderTS(object):
 
     def __init__(self, windows, appliances, time_steps, strd_in, strd_out, 
@@ -69,6 +73,9 @@ class ReaderTS(object):
         test_y  = self.rnn_data(dataBuild, indexTest, indexEnd, apps, self.stride_output, labels=True)
         return train_y, val_y, test_y
 
+    def convert3D(self, dataBuild, indexEnd,apps):
+        return self.rnn_data(dataBuild, 0, indexEnd, apps, self.stride_input, labels=True)
+
     def scaling(self, train, val, test, newShape, thirdDim):
             ##### scaling
         flat_train = np.reshape(train,[-1,thirdDim])
@@ -93,7 +100,25 @@ class ReaderTS(object):
         idxNonZero = np.where(sumZero>0)
         return dataset[idxNonZero], idxNonZero
 
-    def prepare_data(self, dataBuild, numApp):
+    def filtering_Off(self,dataset, building):
+        '''
+        Eliminating sequences where all the time_steps are equal to value that can be considered OFF
+        '''
+        assert len(self.listAppliances)==len(offValues[building])
+        cond=[]
+        for idx, minValue in offValues[building].items():
+            cond.append(dataset[:,:,idx]>minValue)#,dataset[:,1]>0]
+        condArray = np.array(cond)
+        print("cond array shape ",condArray.shape)
+        goodRows = np.any(condArray,axis=0)
+        #print("1st filter ", goodRows.shape)
+        goodRows = np.any(goodRows,axis=1)
+        #print("2nd filter ", goodRows.shape)
+        idxNonZero = np.where(goodRows==True)
+        print("len index ", len(idxNonZero), " shape ", len(idxNonZero[0]))
+        return dataset[idxNonZero], idxNonZero
+
+    def prepare_data(self, dataBuild, numApp, building, typeLoad):
         '''
         Spliting to scale over the training
         Filtering zeros before scaling
@@ -111,8 +136,15 @@ class ReaderTS(object):
         print("Indexes: ",indexVal, indexTest, indexEnd)
         self.bin_edges = np.array([0,indexVal, indexTest, indexEnd])
         #Split and sum as if there was no specific appliance selected
-        train_y, val_y, test_y = self.split_data(dataBuild, indexVal, indexTest, indexEnd, self.listAppliances)
+        if (typeLoad==0):
+            train_y, val_y, test_y = self.split_data(dataBuild, indexVal, indexTest, indexEnd, self.listAppliances)
+        else:
+            bigSet = self.convert3D(dataBuild,0,indexEnd,self.listAppliances)
 
+            indexRandom =  np.random.permutation(len(bigSet))
+            train_y = bigSet[indexRandom[:indexVal]]
+            val_y = bigSet[indexRandom[indexVal:indexTest]]
+            test_y = bigSet[indexRandom[indexTest:indexTest]]
         #sum up to calculate aggregation (x)
         train_x = np.sum(train_y, axis=2)
         val_x   = np.sum(val_y, axis=2)
@@ -155,14 +187,18 @@ class ReaderTS(object):
 
             #Filtering aggregated sequence with no information at all
             if (self.flgFilterZeros==1):
+                '''
                 train_x, idxTrain = self.filtering_zeros(train_x)
                 val_x, idxVal   = self.filtering_zeros(val_x)
                 test_x, idxTest  = self.filtering_zeros(test_x)
-
+                '''
+                train_y, idyTrain=self.filtering_Off(train_y, building)
+                val_y, idyVal   = self.filtering_Off(val_y, building)
+                test_y, idyTest  = self.filtering_Off(test_y, building)
                 #Filtering the same instances in the disaggregated data set
-                train_y = train_y[idxTrain]
-                val_y   = val_y[idxVal]
-                test_y  = test_y[idxTest]
+                train_x = train_x[idyTrain]
+                val_x   = val_x[idyVal]
+                test_x  = test_x[idyTest]
 
             #Scaled each disaggregated separetly and recalculating aggregated consumption
             train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
@@ -177,7 +213,7 @@ class ReaderTS(object):
         return [train_x, val_x, test_x, train_y, val_y, test_y]
 
 
-    def load_csvdata(self, path, numApp):#appliances, filename, self.sample_period, windows
+    def load_csvdata(self, path, numApp, typeLoad=0):#appliances, filename, self.sample_period, windows
         '''
         Parameters:
             fileName
@@ -226,7 +262,7 @@ class ReaderTS(object):
                 data=imagearray['df']
                 data = data.loc[data.index < window[1]]
                 data = data.loc[data.index > window[0]]
-                allSetsBuild = self.prepare_data(data, numApp)
+                allSetsBuild = self.prepare_data(data, numApp,building_i, typeLoad)
             totalX['train'] = np.concatenate((totalX['train'], allSetsBuild[0]),axis=0)
             totalX['val'] = np.concatenate((totalX['val'], allSetsBuild[1]),axis=0)
             totalX['test'] = np.concatenate((totalX['test'], allSetsBuild[2]),axis=0)
