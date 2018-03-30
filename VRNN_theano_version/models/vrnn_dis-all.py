@@ -32,7 +32,7 @@ from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {6990:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {2859:("2015-01-01", "2015-12-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -50,7 +50,8 @@ def main(args):
     period = int(args['period'])
     n_steps = int(args['n_steps'])
     stride_train = int(args['stride_train'])
-    stride_test = n_steps
+    stride_test = int(args['stride_test'])
+    loadType = int(args['loadType'])
 
     flgMSE = int(args['flgMSE'])
     monitoring_freq = int(args['monitoring_freq'])
@@ -82,7 +83,7 @@ def main(args):
     model = Model()
     Xtrain, ytrain, Xval, yval, reader = fetch_dataport(data_path, windows, appliances,numApps=-1, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
-                                              trainPer=0.6, valPer=0.2, testPer=0.2,
+                                              trainPer=0.6, valPer=0.2, testPer=0.2, loadType = loadType,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
 
     instancesPlot = {0:[4,20], 2:[5,10]}
@@ -771,7 +772,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr}
+    lr_iterations = {0:lr, 50:(lr/5)}
 
     mainloop = Training(
         name=pkl_name,
@@ -785,14 +786,15 @@ def main(args):
     )
     mainloop.run()
     fLog = open(save_path+'/output.csv', 'w')
-    lr_iterations = {0:origLR, 100:(origLR/10)}
     fLog.write(str(lr_iterations)+"\n")
-    fLog.write("log,kl,nll_upper_bound,mse1,mse2,mse3,mse4,mse5,mse6,mse7,mse8,mae1,mae2,mae3,mae4,mae5,mae6,mae7,mae8\n")
+    fLog.write(str(windows)+"\n")
+    fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
+    fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
+    fLog.write("epoch,log,kl,mse1,mse2,mse3,mse4,mse5,mse6,mse7,mse8,mae1,mae2,mae3,mae4,mae5,mae6,mae7,mae8\n")
     for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
       ep = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
       b = mainloop.trainlog.monitor['kl_term'][i]
-      c = mainloop.trainlog.monitor['nll_upper_bound'][i]
       d = mainloop.trainlog.monitor['mse1'][i]
       e = mainloop.trainlog.monitor['mse2'][i]
       f = mainloop.trainlog.monitor['mse3'][i]
@@ -809,8 +811,8 @@ def main(args):
       s = mainloop.trainlog.monitor['mae6'][i]
       t = mainloop.trainlog.monitor['mae7'][i]
       u = mainloop.trainlog.monitor['mae8'][i]
-      fLog.write("{},{},{},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f},{0:.3f}\n".format(
-                  ep,a,b,c,d,e,f,g,h,j,k,l,m,n,p,q,r,s,t,u))
+      fLog.write("{:d},{:2f},{:2f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n".format(
+                  ep,a,b,d,e,f,g,h,j,k,l,m,n,p,q,r,s,t,u))
 
 
 if __name__ == "__main__":

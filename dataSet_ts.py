@@ -73,8 +73,8 @@ class ReaderTS(object):
         test_y  = self.rnn_data(dataBuild, indexTest, indexEnd, apps, self.stride_output, labels=True)
         return train_y, val_y, test_y
 
-    def convert3D(self, dataBuild, indexEnd,apps):
-        return self.rnn_data(dataBuild, 0, indexEnd, apps, self.stride_input, labels=True)
+    def convert3D(self, dataBuild, indexEnd):
+        return self.rnn_data(dataBuild, 0, indexEnd, self.listAppliances, self.stride_input, labels=True)
 
     def scaling(self, train, val, test, newShape, thirdDim):
             ##### scaling
@@ -139,12 +139,13 @@ class ReaderTS(object):
         if (typeLoad==0):
             train_y, val_y, test_y = self.split_data(dataBuild, indexVal, indexTest, indexEnd, self.listAppliances)
         else:
-            bigSet = self.convert3D(dataBuild,0,indexEnd,self.listAppliances)
-
+            bigSet = self.convert3D(dataBuild,indexEnd)
+            indexVal = int(self.pTrain * len(bigSet))
+            indexTest = indexVal + int(self.pVal * len(bigSet))
             indexRandom =  np.random.permutation(len(bigSet))
             train_y = bigSet[indexRandom[:indexVal]]
             val_y = bigSet[indexRandom[indexVal:indexTest]]
-            test_y = bigSet[indexRandom[indexTest:indexTest]]
+            test_y = bigSet[indexRandom[indexTest:]]
         #sum up to calculate aggregation (x)
         train_x = np.sum(train_y, axis=2)
         val_x   = np.sum(val_y, axis=2)

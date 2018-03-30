@@ -34,7 +34,7 @@ Building: 2859
 	- Checked at the beggining: 0 - 0.003 20-minutes
 	- Checked at the middle: 5-minute, 60 minutes
 	- Seems like there are different appliances there
-- Microwave normal (>0.007 - 5 minutes - OFF-->0.008)
+- Microwave normal (>0.007 - 5 minutes - OFF-->0.008, 0.009)
 	- Checked at the beggining: 5-minute
 	- Checked at the middle: 5-minute
 	- Should be good to find larger than 5 minutes and if count them
