@@ -3,10 +3,9 @@ data_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/
 save_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output
 sample_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output
 flgMSE 0
-genCase 0
-monitoring_freq 240
+monitoring_freq 310
 epoch 100
-batch_size 150
+batch_size 250
 x_dim 1
 y_dim 8
 z_dim 80
@@ -15,5 +14,7 @@ rnn_dim 100
 lr 0.001
 debug 0
 period 6
-n_steps 90
-stride_train 1
+n_steps 80
+stride_train 80
+stride_test 80
+loadType 1
