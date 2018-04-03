@@ -30,8 +30,9 @@ from cle.cle.utils.gpu_op import concatenate
 from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
+building = 6990
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {6990:("2015-01-01", "2016-01-01"), 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
+windows = {building:("2015-01-01", "2016-01-01")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
 # dishwasher: windows = {6990:("2015-02-12", "2016-01-01"), 2859:("2015-02-01", "2015-12-15"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-04",  "2016-01-01"),3413:("2015-01-01", "2015-12-25")}#3413:("2015-01-01", "2015-12-31")
 # drye: windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-20", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
 
@@ -382,7 +383,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr}
+    lr_iterations = {0:lr, 75:(lr/10), 150:(lr/100)}
 
     mainloop = Training(
         name=pkl_name,
@@ -431,7 +432,7 @@ if __name__ == "__main__":
         param_value = param_list[1]
         params[param_name] = param_value
 
-    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
+    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']+"_"+str(building)
     os.makedirs(params['save_path'])
     shutil.copy('config_AE.txt', params['save_path']+'/config_AE.txt')
 
