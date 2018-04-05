@@ -80,8 +80,8 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
 
     XdataSet, YdataSet = reader.load_csvdata(data_path, numApps,loadType)
     #shape before: batch, apps, steps
-    x_train, x_test, y_train, y_test = XdataSet['train'],XdataSet['test'],YdataSet['train'],YdataSet['test']
+    x_train, x_test, x_val, y_train, y_test, y_val = XdataSet['train'],XdataSet['test'],XdataSet['val'], YdataSet['train'],YdataSet['test'],YdataSet['val']
 
     if (numApps==-1):
-        return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_test,axis=2), y_test, reader  
-    return np.expand_dims(x_train,axis=2), np.expand_dims(y_train,axis=2), np.expand_dims(x_test,axis=2), np.expand_dims(y_test,axis=2), reader
+        return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_val,axis=2), y_val, np.expand_dims(x_test,axis=2), y_test, reader  
+    return np.expand_dims(x_train,axis=2), np.expand_dims(y_train,axis=2), np.expand_dims(x_val,axis=2), np.expand_dims(y_val,axis=2), np.expand_dims(x_test,axis=2), np.expand_dims(y_test,axis=2), reader

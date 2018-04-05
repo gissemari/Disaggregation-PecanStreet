@@ -6,12 +6,26 @@ import os
 import datetime
 from sklearn import preprocessing
 
+offValues = {2859:{'air1':0.2, 'furnace1':0.2, 'refrigerator1':0.1, 'clotheswasher1':0.2, 
+                    'drye1':1, 'dishwasher1':0, 'kitchenapp1':0.005,  'microwave1':0.25},
+             6990:{'air1':1, 'furnace1':0.3, 'refrigerator1':0.1, 'clotheswasher1':0.2, 
+                    'drye1':2, 'dishwasher1':0.5, 'kitchenapp1':0.1,  'microwave1':0.05},
+             7951:{'air1':0.5, 'furnace1':0.01, 'refrigerator1':0.1, 'clotheswasher1':0.1, 
+                    'drye1':1, 'dishwasher1':0.4, 'kitchenapp1':0.2,  'microwave1':0.5},
+             8292:{'air1':0.3, 'furnace1':0.2, 'refrigerator1':0.2, 'clotheswasher1':0.05, 
+                    'drye1':1, 'dishwasher1':0.5, 'kitchenapp1':0.01,  'microwave1':0.5},
+             3413:{'air1':0.3, 'furnace1':0.3, 'refrigerator1':0.1, 'clotheswasher1':0.1, 
+                    'drye1':1, 'dishwasher1':0.5, 'kitchenapp1':0.4,  'microwave1':0.25}}
+
+#'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1'
+
+'''
 offValues = {2859:{0:0.2,1:0.2,2:0.1,3:0.2,4:1,5:0,6:0.005,7:0.25},
              6990:{0:1,1:0.3,2:0.1,3:0.2,4:2,5:0.5,6:0.1,7:0.05},
              7951:{0:0.5,1:0.01,2:0.1,3:0.01,4:1,5:0.4,6:0.2,7:0.5},
              8292:{0:0.3,1:0.2,2:0.2,3:0.05,4:1,5:0.5,6:0.01,7:0.5},
              3413:{0:0.3,1:0.3,2:0.1,3:0.1,4:1,5:0.5,6:0.4,7:0.25}}
-
+'''
 class ReaderTS(object):
 
     def __init__(self, windows, appliances, time_steps, strd_in, strd_out, 
@@ -106,10 +120,10 @@ class ReaderTS(object):
         '''
         Eliminating sequences where all the time_steps are equal to value that can be considered OFF
         '''
-        assert len(self.listAppliances)==len(offValues[building])
+        #assert len(self.listAppliances)==len(offValues[building])
         cond=[]
-        for idx, minValue in offValues[building].items():
-            cond.append(dataset[:,:,idx]>minValue)#,dataset[:,1]>0]
+        for idx, app in enumerate(self.listAppliances):
+            cond.append(dataset[:,:,idx]>offValues[building][app])#,dataset[:,1]>0]
         condArray = np.array(cond)
         print("cond array shape ",condArray.shape)
         goodRows = np.any(condArray,axis=0)
