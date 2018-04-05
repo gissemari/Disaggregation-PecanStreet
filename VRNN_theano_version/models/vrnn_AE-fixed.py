@@ -5,6 +5,8 @@ import theano.tensor as T
 import datetime
 import shutil
 import os
+import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 
 from cle.cle.cost import BiGMM, KLGaussianGaussian, GMM
 from cle.cle.data import Iterator
@@ -30,9 +32,9 @@ from cle.cle.utils.gpu_op import concatenate
 from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
-building = 6990
+building = 2859
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {building:("2015-01-01", "2016-01-01")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
+windows = {building:("2015-06-25", "2015-11-01")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
 # dishwasher: windows = {6990:("2015-02-12", "2016-01-01"), 2859:("2015-02-01", "2015-12-15"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-04",  "2016-01-01"),3413:("2015-01-01", "2015-12-25")}#3413:("2015-01-01", "2015-12-31")
 # drye: windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-20", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
 
@@ -83,7 +85,7 @@ def main(args):
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
-    Xtrain, ytrain, Xval, yval, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
+    Xtrain, ytrain, Xval, yval, Xtest, ytest, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
                                               trainPer=0.6, valPer=0.2, testPer=0.2,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
@@ -109,6 +111,14 @@ def main(args):
                          inputX=Xval,
                          labels = yval)
 
+    test_data = Dataport(name='valid',
+                         prep='normalize',
+                         cond=True,# False
+                         #path=data_path,
+                         X_mean=X_mean,
+                         X_std=X_std,
+                         inputX=Xtest,
+                         labels = ytest)
 
     init_W = InitCell('rand')
     init_U = InitCell('ortho')
@@ -275,6 +285,38 @@ def main(args):
     x_1_temp = x_1.fprop([x], params)
     y_1_temp = y_1.fprop([y], params)
 
+    def inner_fn_val(x_t, s_tm1):
+
+        prior_1_t = prior_1.fprop([s_tm1], params)
+        prior_mu_t = prior_mu.fprop([prior_1_t], params)
+        prior_sig_t = prior_sig.fprop([prior_1_t], params)
+
+        z_t = Gaussian_sample(prior_mu_t, prior_sig_t)
+        z_1_t = z_1.fprop([z_t], params)
+
+        theta_1_t = theta_1.fprop([z_1_t, s_tm1], params)
+        theta_mu_t = theta_mu.fprop([theta_1_t], params)
+        theta_sig_t = theta_sig.fprop([theta_1_t], params)
+
+        coeff_t = coeff.fprop([theta_1_t], params)
+
+        pred_t = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
+        pred_1_t = y_1.fprop([pred_t], params)
+        s_t = rnn.fprop([[x_t, z_1_t, pred_1_t], [s_tm1]], params)
+        #y_pred = dissag_pred.fprop([s_t], params)
+
+        return s_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred_t#, y_pred
+        #corr_temp, binary_temp
+    ((s_temp_val, prior_mu_temp_val, prior_sig_temp_val, z_t_temp_val, z_1_temp_val, theta_1_temp_val, theta_mu_temp_val, theta_sig_temp_val, coeff_temp_val, prediction_val), updates_val) =\
+        theano.scan(fn=inner_fn_val,
+                    sequences=[x_1_temp],
+                    outputs_info=[s_0, None, None, None, None, None, None,  None, None, None])
+
+    for k, v in updates_val.iteritems():
+        k.default_update = v
+
+    s_temp_val = concatenate([s_0[None, :, :], s_temp_val[:-1]], axis=0)
+
     def inner_fn_train(x_t, y_t, s_tm1):
 
         phi_1_t = phi_1.fprop([x_t, s_tm1,y_t], params)
@@ -359,6 +401,25 @@ def main(args):
       nll_upper_bound = nll_upper_bound + mse
     nll_upper_bound.name = 'nll_upper_bound'
 
+    ######################## TEST (GENERATION) TIME
+    prediction_val.name = 'generated__'+str(flgAgg)
+    mse_val = T.mean((prediction_val - y)**2) # As axis = None is calculated for all
+    mae_val = T.mean( T.abs_(prediction_val - y) )
+    mse_val.name = 'mse_val'
+    mae_val.name = 'mae_val'
+    pred_in_val = y.reshape((y.shape[0]*y.shape[1],-1))
+
+    theta_mu_in_val = theta_mu_temp_val.reshape((x_shape[0]*x_shape[1], -1))
+    theta_sig_in_val = theta_sig_temp_val.reshape((x_shape[0]*x_shape[1], -1))
+    coeff_in_val = coeff_temp_val.reshape((x_shape[0]*x_shape[1], -1))
+
+    recon_val = GMM(pred_in_val, theta_mu_in_val, theta_sig_in_val, coeff_in_val)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
+    recon_val = recon_val.reshape((x_shape[0], x_shape[1]))
+    recon_val.name = 'gmm_out_val'
+
+    recon_term_val= recon_val.sum(axis=0).mean()
+    recon_term_val.name = 'recon_term_val'
+
     model.inputs = [x, mask, y, y_mask]
     model.params = params
     model.nodes = nodes
@@ -397,21 +458,79 @@ def main(args):
 
     )
     mainloop.run()
+
+    z_t_temp_val.name='z_temp_val'
+    s_temp_val.name='s_temp_val'
+    theta_mu_temp_val.name='mu_temp'
+
+    data=Iterator(test_data, batch_size)
+
+    test_fn = theano.function(inputs=[x, y],#[x, y],
+                              #givens={x:Xtest},
+                              #on_unused_input='ignore',
+                              #z=( ,200,1)
+                              allow_input_downcast=True,
+                              outputs=[z_t_temp_val, s_temp_val, theta_mu_temp_val, prediction_val, recon_term_val, mse_val, mae_val]#prediction_val, mse_val, mae_val
+                              ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
+                              )
+    testOutput = []
+    numBatchTest = 0
+    for batch in data:
+      outputGeneration = test_fn(batch[0], batch[2])#(20, 220, 1)
+      testOutput.append(outputGeneration[4:])
+      # outputGeneration[0].shape #(20, 220, 40)
+      #if (numBatchTest<5):
+
+      '''
+      plt.figure(1)
+      plt.plot(np.transpose(outputGeneration[0],[1,0,2])[4])
+      plt.savefig(save_path+"/vrnn_dis_generated{}_z_0-4".format(numBatchTest))
+      plt.clf()
+
+      plt.figure(2)
+      plt.plot(np.transpose(outputGeneration[1],[1,0,2])[4])
+      plt.savefig(save_path+"/vrnn_dis_generated{}_s_0-4".format(numBatchTest))
+      plt.clf()
+
+      plt.figure(3)
+      plt.plot(np.transpose(outputGeneration[2],[1,0,2])[4])
+      plt.savefig(save_path+"/vrnn_dis_generated{}_theta_0-4".format(numBatchTest))
+      plt.clf()
+      '''
+      plt.figure(4)
+      plt.plot(np.transpose(outputGeneration[3],[1,0,2])[4])
+      plt.plot(np.transpose(batch[2],[1,0,2])[4])
+      plt.savefig(save_path+"/vrnn_dis_generated{}_RealAndPred_0-4".format(numBatchTest))
+      plt.clf()
+
+      plt.figure(4)
+      plt.plot(np.transpose(batch[0],[1,0,2])[4])
+      plt.savefig(save_path+"/vrnn_dis_generated{}_Realagg_0-4".format(numBatchTest))
+      plt.clf()
+      numBatchTest+=1
+
+    testOutput = np.asarray(testOutput)
+    print(testOutput.shape)
+    recon_test = this_mean = testOutput[:, 0].mean()
+    mse_test = this_mean = testOutput[:, 1].mean()
+    mae_test = this_mean = testOutput[:, 2].mean()
+
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
+    fLog.write("logTest,mseTest,maeTest\n")
+    fLog.write("{},{},{}\n".format(recon_test,mse_test,mae_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
-    header = "epoch,log,mse,mae\n"
+    header = "epoch,log,kl,mse,mae\n"
     fLog.write(header)
     for i , item in enumerate(mainloop.trainlog.monitor['recon_term']):
       f = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
+      b = mainloop.trainlog.monitor['kl_term'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{},{},{},{}\n".format(f,a,d,e))
-    
-
+      fLog.write("{},{},{},{},{}\n".format(f,a,b,d,e))
 
 if __name__ == "__main__":
 
@@ -432,7 +551,7 @@ if __name__ == "__main__":
         param_value = param_list[1]
         params[param_name] = param_value
 
-    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']+"_"+str(building)
+    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
     os.makedirs(params['save_path'])
     shutil.copy('config_AE.txt', params['save_path']+'/config_AE.txt')
 
