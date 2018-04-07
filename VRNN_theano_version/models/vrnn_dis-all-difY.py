@@ -895,7 +895,7 @@ def main(args):
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     fLog.write("epoch,log,kl,mse1,mse2,mse3,mse4,mse5,mse6,mse7,mse8,mae1,mae2,mae3,mae4,mae5,mae6,mae7,mae8\n")
     for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
-      e,f,g,h,j,k,l,n,p,q,r,s,t,u =  '','','','','','','','','','','','','',''
+      e,f,g,h,j,k,l,n,p,q,r,s,t,u =  0,0,0,0,0,0,0,0,0,0,0,0,0,0
       ep = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
       b = mainloop.trainlog.monitor['kl_term'][i]

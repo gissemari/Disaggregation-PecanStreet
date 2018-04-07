@@ -4,7 +4,7 @@ save_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/
 sample_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output
 flgMSE 0
 monitoring_freq 140
-epoch 200
+epoch 300
 batch_size 200
 x_dim 1
 y_dim 2

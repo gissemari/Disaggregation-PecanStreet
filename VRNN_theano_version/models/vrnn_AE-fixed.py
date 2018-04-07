@@ -34,7 +34,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 building = 2859
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {building:("2015-06-25", "2015-11-01")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
+windows = {building:("2015-01-01", "2015-12-31")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
 # dishwasher: windows = {6990:("2015-02-12", "2016-01-01"), 2859:("2015-02-01", "2015-12-15"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-04",  "2016-01-01"),3413:("2015-01-01", "2015-12-25")}#3413:("2015-01-01", "2015-12-31")
 # drye: windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-20", "2015-12-31")}#3413:("2015-01-01", "2015-12-31")
 
@@ -68,6 +68,7 @@ def main(args):
     rnn_dim = int(args['rnn_dim'])
     k = int(args['num_k']) #a mixture of K Gaussian functions
     lr = float(args['lr'])
+    typeLoad = args['typeLoad']
     debug = int(args['debug'])
 
     print "trial no. %d" % trial
@@ -76,18 +77,18 @@ def main(args):
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
 
-    q_z_dim = 80#150
-    p_z_dim = 80#150
-    p_x_dim = 60#250
-    x2s_dim = 50#250
-    y2s_dim = 50
-    z2s_dim = 60#150
+    q_z_dim = 150
+    p_z_dim = 150
+    p_x_dim = 150#250
+    x2s_dim = 100#250
+    y2s_dim = 100
+    z2s_dim = 100#150
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
     Xtrain, ytrain, Xval, yval, Xtest, ytest, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
-                                              trainPer=0.6, valPer=0.2, testPer=0.2,
+                                              trainPer=0.6, valPer=0.2, testPer=0.2, loadType=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
     instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
