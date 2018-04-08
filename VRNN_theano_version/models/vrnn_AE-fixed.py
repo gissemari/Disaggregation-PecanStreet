@@ -68,7 +68,7 @@ def main(args):
     rnn_dim = int(args['rnn_dim'])
     k = int(args['num_k']) #a mixture of K Gaussian functions
     lr = float(args['lr'])
-    typeLoad = args['typeLoad']
+    typeLoad = int(args['typeLoad'])
     debug = int(args['debug'])
 
     print "trial no. %d" % trial
@@ -88,7 +88,7 @@ def main(args):
     model = Model()
     Xtrain, ytrain, Xval, yval, Xtest, ytest, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
-                                              trainPer=0.6, valPer=0.2, testPer=0.2, loadType=typeLoad,
+                                              trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
     instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
