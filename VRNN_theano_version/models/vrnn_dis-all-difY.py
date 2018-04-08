@@ -33,7 +33,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['furnace1','refrigerator1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {2859:("2015-01-01", "2015-12-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {2859:("2015-01-01", "2015-12-31")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -84,7 +84,7 @@ def main(args):
     model = Model()
     Xtrain, ytrain, Xval, yval, Xtest,ytest, reader = fetch_dataport(data_path, windows, appliances,numApps=-1, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
-                                              trainPer=0.6, valPer=0.2, testPer=0.2, loadType = loadType,
+                                              trainPer=0.5, valPer=0.25, testPer=0.25, typeLoad = loadType,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
 
     instancesPlot = {0:[4,20], 2:[5,10]}
