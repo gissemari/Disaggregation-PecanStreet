@@ -78,7 +78,7 @@ def main(args):
     p_x_dim = 500
     x2s_dim = 200
     y2s_dim = 200
-    z2s_dim = 100
+    z2s_dim = 200
     target_dim = k# As different appliances are separeted in theta_mu1, theta_mu2, etc... each one is just created from k different Gaussians
 
     model = Model()

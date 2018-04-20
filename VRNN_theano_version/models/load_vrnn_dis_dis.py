@@ -5,8 +5,8 @@ import theano.tensor as T
 import datetime
 import shutil
 import os
+import cPickle
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
 
 from cle.cle.cost import BiGMM, KLGaussianGaussian, GMM
 from cle.cle.data import Iterator
@@ -33,8 +33,10 @@ from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {2859:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-14", "2016-01-01")}
+#appliancesNames = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
+windows = {2859:("2015-01-01", "2016-01-01")}
 #air: windows = {2859:("2015-06-25", "2015-11-01"),6990:("2015-06-01", "2015-11-01"),7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01", "2015-11-01"),3413:("2015-06-01", "2015-11-01")}
+#windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01", "2016-01-01"),3413:("2015-01-01", "2016-01-01")}
 listDates = {2859:['2015-08-26 07:57'],6990:['2015-10-15 08:18']}
 
 def main(args):
@@ -65,6 +67,7 @@ def main(args):
     rnn_dim = int(args['rnn_dim'])
     k = int(args['num_k']) #a mixture of K Gaussian functions
     lr = float(args['lr'])
+    typeLoad = int(args['typeLoad'])
     debug = int(args['debug'])
     n_steps_val=n_steps*3
 
@@ -74,20 +77,20 @@ def main(args):
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
 
-    q_z_dim = 100#150
-    p_z_dim = 60#150
-    p_x_dim = 20#250
-    x2s_dim = 40#250
-    z2s_dim = 40#150
+    q_z_dim = 150
+    p_z_dim = 150
+    p_x_dim = 250
+    x2s_dim = 250
+    z2s_dim = 150
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
-    Xtrain, ytrain, Xval, yval, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
+    Xtrain, ytrain, Xval, yval, Xtest, ytest, reader = fetch_dataport(data_path, windows, appliances,numApps=flgAgg, period=period,
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
-                                              trainPer=0.6, valPer=0.2, testPer=0.2,
+                                              trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
+    instancesPlot = {0:[5,10], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
@@ -352,14 +355,14 @@ def main(args):
     binary_temp = binary.fprop([theta_1_temp], params)
     '''
 
-    s_temp.name = 'h_1'#gisse
-    z_1_temp.name = 'z_1'#gisse
+    s_temp.name = 'h'#gisse
+    z_1_temp.name = 'z2'#gisse
     z_t_temp.name = 'z'
-    theta_mu_temp.name = 'theta_mu_temp'
-    theta_sig_temp.name = 'theta_sig_temp'
+    theta_mu_temp.name = 'mu'
+    theta_sig_temp.name = 'sig'
     coeff_temp.name = 'coeff'
     
-    prediction.name = 'pred_'+str(flgAgg)
+    prediction.name = 'Prediction-'+str(appliances[flgAgg][:-1])
     mse = T.mean((prediction - x)**2) # As axis = None is calculated for all
     mae = T.mean( T.abs_(prediction - x) )
     mse.name = 'mse'
@@ -453,8 +456,7 @@ def main(args):
         EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
                    ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
-                          theta_mu_temp, theta_sig_temp, z_t_temp, prediction,#corr_temp, binary_temp, 
-                          s_temp, z_1_temp],
+                          prediction],
                    indexSep=5,
                    indexDDoutPlot = [(0,theta_mu_temp), (2, z_t_temp), (3,prediction)],
                    instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
@@ -465,7 +467,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 70:(lr/10)}
+    lr_iterations = {0:lr, 100:(lr/10)}
 
     mainloop = Training(
         name=pkl_name,
@@ -481,35 +483,35 @@ def main(args):
     mainloop.run()
 
     test_fn = theano.function(inputs=[],
-                          outputs=[z_t_temp_val, s_temp_val, theta_mu_temp_val, prediction_val],
+                          outputs=[prediction_val],
                           updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                           )
 
     outputGeneration = test_fn()
-    
     #{0:[4,20], 2:[5,10]} 
+    '''
     plt.figure(1)
-    plt.plot(np.transpose(outputGeneration[0],[1,0,2])[4])
-    plt.savefig(save_path+"/vrnn_dis_generated_z_0-4")
+    plt.plot(np.transpose(outputGeneration[0],[1,0,2])[5])
+    plt.savefig(save_path+"/vrnn_dis_generated_z_0-4.ps")
 
     plt.figure(2)
-    plt.plot(np.transpose(outputGeneration[1],[1,0,2])[4])
-    plt.savefig(save_path+"/vrnn_dis_generated_s_0-4")
+    plt.plot(np.transpose(outputGeneration[1],[1,0,2])[5])
+    plt.savefig(save_path+"/vrnn_dis_generated_s_0-4.ps")
 
     plt.figure(3)
-    plt.plot(np.transpose(outputGeneration[2],[1,0,2])[4])
-    plt.savefig(save_path+"/vrnn_dis_generated_theta_0-4")
-
+    plt.plot(np.transpose(outputGeneration[2],[1,0,2])[5])
+    plt.savefig(save_path+"/vrnn_dis_generated_theta_0-4.ps")
+    '''
     plt.figure(4)
-    plt.plot(np.transpose(outputGeneration[3],[1,0,2])[4])
-    plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4")
+    plt.plot(np.transpose(outputGeneration[0],[1,0,2])[2])
+    plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim))
-    fLog.write("log,kl,nll_upper_bound,mse,mae\n")
+    fLog.write("epoch,log,kl,nll_upper_bound,mse,mae\n")
     for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
       f = mainloop.trainlog.monitor['epoch'][i]
       a = mainloop.trainlog.monitor['recon_term'][i]
@@ -517,8 +519,12 @@ def main(args):
       c = mainloop.trainlog.monitor['nll_upper_bound'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{},{},{},{},{},{}\n".format(f,a,b,c,d,e))
+      fLog.write("{:d},{:2f},{:2f},{:2f},{:.3f},{:.3f}\n".format(f,a,b,c,d,e))
+    fLog.close()
     
+    f = open(save_path+'/outputRealGeneration.pkl', 'wb')
+    cPickle.dump(outputGeneration, f, -1)
+    f.close()
 
 
 if __name__ == "__main__":
