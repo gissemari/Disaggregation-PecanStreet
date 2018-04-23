@@ -95,25 +95,47 @@ Building: 7951
 	- checked at the middle: 20, 
 
 Building: 8292
-- Air, higher btw 2015-04 to 2015-11
-- Furnace, just two downs (not total) btw 2015-03 and 2015-05
-- Refrigerator pretty normal
-- Clotheswasher pretty normal
-- Drye pretty normal
-- Dish washer pretty normal
-- Kitchenapp low betwenn 2015-03 to 2015-11
-- microwave pretty normal
+- Air (>0.002 low seq >1 real activ - 30,60,90 min - OFF ->0) higher btw 2015-04 to 2015-11
+	- checked at the beginning: 30,60,90. Notice there are some sequences, repeated patterns with very low values. The real ones are above 2
+	- checked at the middle: 30 mins
+- Furnace (>0.2 - 40 mins - OFF->0.009) just two downs (not total) btw 2015-03 and 2015-05
+	- checked at the beginning: 40 mins
+	- checked at the middle: 30 min
+- Refrigerator (>0.2 - 180 min-OFF 0.006,0.007) pretty normal
+	- Checked at the beginning: 180 minu
+	- checked at the middle: 
+- Clotheswasher (>0.5 - 120 min- OFF->0.005 and 0 has more)pretty normal
+	- Checked at the beginning: between two activations, seems like low variant up to 0.049. Length of 120 mins
+	- np.max(data['clotheswasher1']['2015-01-17 17:00:00':'2015-01-17 18:54:00'])
+	- #8292 clotheswasher 0:501308 0-0.5:24037
+	- not checked
+- Drye (>1 - 60,150 mins - OFF->0 ) pretty normal
+	- checked at the beginning: 60 mins, 150 mins
+	- not checked in middle
+- Dish washer (>0.2 - 360 mins - OFF->0) pretty normal
+	- 
+- Kitchenapp (>0.2,0.002 - 60min,180 - OFF-> 0, 0.003, 0.004) low betwenn 2015-03 to 2015-11
+	- checked at the beginning: 60 mins
+	- checked at the middle: 180 mins, 240 mins, 60 mins
+	- Seems like there are some little consumptions of 0.003 and 0.004
+- microwave (>0.5 - 5, 15 mins - OFF -> 0.004) pretty normal
+	- 
 
 
 Building: 3413
-- Air greatest between 2015-03 to 2015-11
-- Furnace (weird)
-- Refrigerator pretty normal
-- clotheswasher1: pretty normal. After filtering, does not have any instance for training for app3
-- Drye pretty normal
-- Dish washer pretty normal
-- kitchen app pretty normal except for two slots where it seems 0 total
-- microwave pretty normal 
+- Air (>0.3 - 20mins, 10mins - OFF-> 0) greatest between 2015-03 to 2015-11
+- Furnace (>0.3 - 25mins, 70mins - OFF-> 0.348, 0.349, 0.335, 0.334 , 0.011)(weird)
+	- checked at the beginning: 70 mins .couple of times it gets 0. For the ones that get very low.. just to 0.011
+	- checked at the middle: 25 mins, 30mins. almost no value to 0 just in a range of 0.3 to 0.5
+- Refrigerator (>0.1 - 40mins, 150mins- OFF->0.004, 0.005) pretty normal
+	- checked at the beginning: also 150 mins (highes 0.8)
+- clotheswasher1 (>0.1 - 90mins - OFF -> 0): pretty normal. After filtering, does not have any instance for training for app3
+- Drye (> 1- 60 mins -OFF-> 0.014) pretty normal
+	- checked at the beginning: 60, 90 mins, 20 mins. Seems like the 20-minute ones is very similar to the last part of the 60,90
+- Dish washer (>0.5 - 120, 180 - OFF ->0) pretty normal
+- kitchen app (>0.4 - 10, 15 mins- OFF ->0, 0.003, 0.004) pretty normal except for two slots where it seems 0 total
+	- checked middle: Again some low consumptions betwee 0.003 and 0.004 of 3 hours=180 min
+- microwave (>0.25 -5, 10, 30 mins - OFF->0.004, 0.005) pretty normal 
 
 ############ CONCLUSIONS
 - First experiment each building separately
