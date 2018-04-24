@@ -34,7 +34,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
 #appliancesNames = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
-windows = {2859:("2015-01-01", "2016-01-01")}
+windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01", "2016-01-01"),3413:("2015-01-01", "2016-01-01")}
 #air: windows = {2859:("2015-06-25", "2015-11-01"),6990:("2015-06-01", "2015-11-01"),7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01", "2015-11-01"),3413:("2015-06-01", "2015-11-01")}
 #windows = {2859:("2015-01-01", "2016-01-01"),6990:("2015-01-01", "2016-01-01"),7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01", "2016-01-01"),3413:("2015-01-01", "2016-01-01")}
 listDates = {2859:['2015-08-26 07:57'],6990:['2015-10-15 08:18']}
@@ -77,11 +77,11 @@ def main(args):
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
 
-    q_z_dim = 150
-    p_z_dim = 150
-    p_x_dim = 250
-    x2s_dim = 250
-    z2s_dim = 150
+    q_z_dim = 100
+    p_z_dim = 100
+    p_x_dim = 200
+    x2s_dim = 150
+    z2s_dim = 100
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
@@ -90,7 +90,7 @@ def main(args):
                                               trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = {0:[5,10], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
+    instancesPlot = {0:[5], 2:[10]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
@@ -467,7 +467,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 100:(lr/10)}
+    lr_iterations = {0:lr, 20:(lr/10), 100:(lr/100)}
 
     mainloop = Training(
         name=pkl_name,
@@ -505,6 +505,15 @@ def main(args):
     plt.figure(4)
     plt.plot(np.transpose(outputGeneration[0],[1,0,2])[2])
     plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
+
+    plt.figure(4)
+    plt.plot(np.transpose(outputGeneration[0],[1,0,2])[10])
+    plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
+
+    plt.figure(4)
+    plt.plot(np.transpose(outputGeneration[0],[1,0,2])[15])
+    plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
+
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
