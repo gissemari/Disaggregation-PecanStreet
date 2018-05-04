@@ -31,7 +31,8 @@ Most of the parameters are similar through all vrnn models:
 - stride_test: stride or space between instances in the testing set
 - typeLoad: 
 	- 0 for original load where the total set is divided in training, validation and testing in an specific order.
-	- 1 Building instances randomly, without any overlap and assigning specific number to train, test and val
+	- 2 Building instances randomly, without any overlap and assigning specific number to train, test and val
+	- 1 (not used for this dataset. For ukdale: kelly's load)
 - stride_train:
 	- 1: when typeLoad is 0 (because it will use 1 to have overlapped instances in the training, but will use n_steps for the stride in the testing instances)
 	- n_steps: when the typeLoad is 1 (because as we randomly choose instances, we need to guarantee that the testing instances or any part of them are also part of the training set)
