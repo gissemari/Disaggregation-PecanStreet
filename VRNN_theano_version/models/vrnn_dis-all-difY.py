@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import numpy as np
 import theano
 import theano.typed_list as TL
@@ -35,7 +35,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['furnace1','refrigerator1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {2859:("2015-01-01", "2015-12-31")}#3413:("2015-06-01", "2015-12-31")
+windows = {2859:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -963,7 +963,7 @@ def main(args):
       totaMAE_val+=mae2_val
       indexSepDynamic_val +=2
 
-      prediction_val = T.concatenate([prediction_val, y_pred2_temp_val], axis=1)
+      prediction_val = T.concatenate([prediction_val, y_pred2_temp_val], axis=2)
 
     if (y_dim>2):
       theta_mu3_temp_val, theta_sig3_temp_val, coeff3_temp_val, y_pred3_temp_val = restResults_val[:4]
@@ -988,7 +988,7 @@ def main(args):
       totaMAE_val+=mae3_val
       indexSepDynamic_val +=2
 
-      prediction_val = T.concatenate([prediction_val, y_pred3_temp_val], axis=1)
+      prediction_val = T.concatenate([prediction_val, y_pred3_temp_val], axis=2)
 
     if (y_dim>3):
       theta_mu4_temp_val, theta_sig4_temp_val, coeff4_temp_val, y_pred4_temp_val = restResults_val[:4]
@@ -1012,7 +1012,7 @@ def main(args):
       totaMSE_val+=mse4_val
       totaMAE_val+=mae4_val
       indexSepDynamic_val +=2
-      prediction_val = T.concatenate([prediction_val, y_pred4_temp_val], axis=1)
+      prediction_val = T.concatenate([prediction_val, y_pred4_temp_val], axis=2)
 
     if (y_dim>4):
       theta_mu5_temp_val, theta_sig5_temp_val, coeff5_temp_val, y_pred5_temp_val = restResults_val[:4]
@@ -1114,6 +1114,8 @@ def main(args):
     recon_val = GMMdisagMulti(y_dim, y_in, theta_mu1_in_val, theta_sig1_in_val, coeff1_in_val, *argsGMM_val)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
     recon_val = recon_val.reshape((x_shape[0], x_shape[1]))
     recon_val.name = 'gmm_out'
+    totaMSE_val = totaMSE_val/y_dim
+    totaMAE_val = totaMAE_val/y_dim
 
     '''
     recon5 = GMM(y_in[:,4, None], theta_mu5_in, theta_sig5_in, coeff5_in)
@@ -1149,7 +1151,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr}
+    lr_iterations = {0:lr,50:(lr/10), 150:(lr/100)}
 
     mainloop = Training(
         name=pkl_name,
@@ -1207,6 +1209,8 @@ def main(args):
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(appliances)+"\n")
     fLog.write(str(windows)+"\n")
+    fLog.write("logTest,mseTest,maeTest\n")
+    fLog.write("{},{},{}\n".format(recon_test,mse_test,mae_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     fLog.write("epoch,log,kl,mse1,mse2,mse3,mse4,mse5,mse6,mse7,mse8,mae1,mae2,mae3,mae4,mae5,mae6,mae7,mae8\n")
@@ -1239,7 +1243,7 @@ def main(args):
       if (y_dim>7):
         l = mainloop.trainlog.monitor['mse8'][i]
         u = mainloop.trainlog.monitor['mae8'][i]
-      fLog.write("{:d},{:2f},{:2f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n".format(
+      fLog.write("{:d},{:.2f},{:.2f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n".format(
                   ep,a,b,d,e,f,g,h,j,k,l,m,n,p,q,r,s,t,u))
     f = open(save_path+'/outputRealGeneration.pkl', 'wb')
     pickle.dump(outputGeneration, f, -1)

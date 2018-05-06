@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import numpy as np
 import theano
 import theano.tensor as T
@@ -76,12 +76,13 @@ def main(args):
     print "learning rate %f" % lr
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
+    print str(windows)
 
-    q_z_dim = 100
-    p_z_dim = 100
+    q_z_dim = 180
+    p_z_dim = 180
     p_x_dim = 200
-    x2s_dim = 150
-    z2s_dim = 100
+    x2s_dim = 100
+    z2s_dim = 150
     target_dim = k#x_dim #(x_dim-1)*k
 
     model = Model()
@@ -467,7 +468,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 20:(lr/10), 100:(lr/100)}
+    lr_iterations = {0:lr, 150:(lr/10), 270:(lr/100), 370:(lr/1000)}
 
     mainloop = Training(
         name=pkl_name,
@@ -502,15 +503,15 @@ def main(args):
     plt.plot(np.transpose(outputGeneration[2],[1,0,2])[5])
     plt.savefig(save_path+"/vrnn_dis_generated_theta_0-4.ps")
     '''
-    plt.figure(4)
+    plt.figure(1)
     plt.plot(np.transpose(outputGeneration[0],[1,0,2])[2])
     plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
 
-    plt.figure(4)
+    plt.figure(2)
     plt.plot(np.transpose(outputGeneration[0],[1,0,2])[10])
     plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
 
-    plt.figure(4)
+    plt.figure(3)
     plt.plot(np.transpose(outputGeneration[0],[1,0,2])[15])
     plt.savefig(save_path+"/vrnn_dis_generated_pred_0-4.ps")
 
@@ -528,7 +529,7 @@ def main(args):
       c = mainloop.trainlog.monitor['nll_upper_bound'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{:d},{:2f},{:2f},{:2f},{:.3f},{:.3f}\n".format(f,a,b,c,d,e))
+      fLog.write("{:d},{:.2f},{:.2f},{:.2f},{:.3f},{:.3f}\n".format(f,a,b,c,d,e))
     fLog.close()
     
     f = open(save_path+'/outputRealGeneration.pkl', 'wb')
