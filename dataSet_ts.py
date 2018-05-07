@@ -259,11 +259,12 @@ class ReaderTS(object):
         for building_i, window in self.windows.items():
             flgNewLoad = 0
             print(building_i)
+            if (numApp!=-1):
+                truFileName=str(building_i)+'_'+self.listAppliances[numApp]+'_'+str(self.time_steps)+'_'+str(self.stride_input)+'_'+window[0]+'_'+window[1]#fileName[pos:]
+            else:
+                truFileName=str(building_i)+'_'+'all'+'_'+str(self.time_steps)+'_'+str(self.stride_input)+'_'+window[0]+'_'+window[1]
+
             try:
-                if (numApp!=-1):
-                    truFileName=str(building_i)+'_'+self.listAppliances[numApp]+'_'+'_'+window[0]+'_'+window[1]#fileName[pos:]
-                else:
-                    truFileName=str(building_i)+'_'+'all'+'_'+'_'+window[0]+'_'+window[1]
                 allSetsBuild = []*len(self.listAppliances)
                 X = pickle.load( open(path+"/pickles/"+truFileName+"_X.pickle","rb"))
                 Y = pickle.load( open(path+"/pickles/"+truFileName+"_Y.pickle","rb"))
@@ -280,6 +281,12 @@ class ReaderTS(object):
                 data = data.loc[data.index < window[1]]
                 data = data.loc[data.index > window[0]]
                 allSetsBuild = self.prepare_data(data, numApp,building_i, typeLoad)
+
+                with open(path+"/pickles/"+truFileName+"_X.pickle",'wb') as fX:
+                    pickle.dump({'train':allSetsBuild[0],'val':allSetsBuild[1],'test':allSetsBuild[2]}, fX)
+                with open(path+"/pickles/"+truFileName+"_Y.pickle",'wb') as fY:
+                    pickle.dump({'train':allSetsBuild[3],'val':allSetsBuild[4],'test':allSetsBuild[5]},fY)
+
             totalX['train'] = np.concatenate((totalX['train'], allSetsBuild[0]),axis=0)
             totalX['val'] = np.concatenate((totalX['val'], allSetsBuild[1]),axis=0)
             totalX['test'] = np.concatenate((totalX['test'], allSetsBuild[2]),axis=0)
@@ -288,16 +295,11 @@ class ReaderTS(object):
             totalY['test'] = np.concatenate((totalY['test'], allSetsBuild[5]),axis=0)
             print("One more building ", totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
 
-            if (flgNewLoad==1):
-                with open(path+"/pickles/"+truFileName+"_X.pickle",'wb') as fX:
-                    pickle.dump(totalX, fX)
-                with open(path+"/pickles/"+truFileName+"_Y.pickle",'wb') as fY:
-                    pickle.dump(totalY,fY)
+
             #os.makedirs(os.path.dirname(cwd+"/pickles/"+truFileName))
             #os.makedirs(os.path.dirname(cwd+"/pickles/"+truFileName))
             #this assumes you have a "pickles" directory at the same level as this file
         print(totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
-        print(data.dtypes)
         return totalX, totalY
 
     def build_dict_instances_plot(self,listDates, sizeBatch, TestSize):

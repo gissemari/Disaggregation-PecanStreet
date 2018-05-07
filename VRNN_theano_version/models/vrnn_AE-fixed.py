@@ -1,4 +1,4 @@
-import ipdb
+#import ipdb
 import numpy as np
 import theano
 import theano.tensor as T
@@ -520,7 +520,7 @@ def main(args):
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
     fLog.write("logTest,mseTest,maeTest\n")
-    fLog.write("{},{},{}\n".format(recon_test,mse_test,mae_test))
+    fLog.write("{},{},{}\n\n".format(recon_test,mse_test,mae_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     header = "epoch,log,kl,mse,mae\n"
@@ -531,7 +531,7 @@ def main(args):
       b = mainloop.trainlog.monitor['kl_term'][i]
       d = mainloop.trainlog.monitor['mse'][i]
       e = mainloop.trainlog.monitor['mae'][i]
-      fLog.write("{},{},{},{},{}\n".format(f,a,b,d,e))
+      fLog.write("{:d},{:.2f},{:.2f},{:.3f},{:.3f}\n".format(f,a,b,d,e))
 
 if __name__ == "__main__":
 

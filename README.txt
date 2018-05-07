@@ -16,17 +16,27 @@ Most of the parameters are similar through all vrnn models:
 - data_path is the path of data files: .../PecanStreet-dataport/datasets
 - save_path is the folder where the output is going to be saved, usually .../VRNN_theano_version/output
 - flgMSE 0 for not include mse in the cost and 1 otherwise
-- monitoring_freq 310
-epoch 100
-batch_size 250
-x_dim 1
-y_dim 8
-z_dim 80
-num_k 20
-rnn_dim 100
-lr 0.001
-debug 0
-period 6
-n_steps 80
-stride_train 80
-stride_test 80
+- monitoring_freq: number of training batches after which perform a validation process
+- epoch: number of iterations
+- batch_size
+- x_dim: aggregated signal (1)
+- y_dim: disaggregated signal (number of appliances)
+- z_dim: units in z layer
+- num_k: number of mixture gaussian distributions
+- rnn_dim: number of units for the recurrent layer
+- lr: learning rate
+- period: not used anymore because the sampling is already every one minute and we don't want lower frequency
+- n_steps: sequence length
+- stride_train: stride or space between instances in the training set
+- stride_test: stride or space between instances in the testing set
+- typeLoad: 
+	- 0 for original load where the total set is divided in training, validation and testing in an specific order.
+	- 2 Building instances randomly, without any overlap and assigning specific number to train, test and val
+	- 1 (not used for this dataset. For ukdale: kelly's load)
+- stride_train:
+	- 1: when typeLoad is 0 (because it will use 1 to have overlapped instances in the training, but will use n_steps for the stride in the testing instances)
+	- n_steps: when the typeLoad is 1 (because as we randomly choose instances, we need to guarantee that the testing instances or any part of them are also part of the training set)
+
+- Hardcode: buildings, APPLIANCES (we call it by specifying the number of appliances we want at loadCSVdataVRNN
+), windows of time and instances to plot
+
