@@ -45,6 +45,8 @@ class ReaderTS(object):
         self.flgFilterZeros = flgFilterZeros
         self.bin_edges = None
         self.idxFiltered = []
+        self.meanTrain = 0
+        self.stdTrain = 0
         assert (trainPer+valPer+testPer) == 1
         
     def rnn_data( self, data, idxStart, idxEnd, apps, stride, labels=False):
@@ -99,6 +101,9 @@ class ReaderTS(object):
         flat_test = np.reshape(test,[-1,thirdDim])
 
         scalerY = preprocessing.StandardScaler().fit(flat_train)
+        #mean-> mean and scale->std
+        self.meanTrain = scalerY.mean_
+        self.stdTrain = scalerY.scale_
 
         train = scalerY.transform(flat_train) if flat_train.shape[0]!=0 else train
         train = np.reshape(train, newShape)
@@ -116,13 +121,14 @@ class ReaderTS(object):
         idxNonZero = np.where(sumZero>0)
         return dataset[idxNonZero], idxNonZero
 
-    def filtering_Off(self,dataset, building):
+    def filtering_Off(self,dataset, building, newListApps):
         '''
         Eliminating sequences where all the time_steps are equal to value that can be considered OFF
         '''
         #assert len(self.listAppliances)==len(offValues[building])
         cond=[]
-        for idx, app in enumerate(self.listAppliances):
+        for idx, app in enumerate(newListApps):
+            #print(idx,building,app, dataset.shape)
             cond.append(dataset[:,:,idx]>offValues[building][app])#,dataset[:,1]>0]
         condArray = np.array(cond)
         print("cond array shape ",condArray.shape)
@@ -176,17 +182,21 @@ class ReaderTS(object):
             shapeY = [-1,self.time_steps]
             shapeX = [-1,self.time_steps]
 
-            train_y, val_y, test_y = train_y[:,:,numApp], val_y[:,:,numApp], test_y[:,:,numApp]
+            train_y, val_y, test_y = np.expand_dims(train_y[:,:,numApp],axis=2), np.expand_dims(val_y[:,:,numApp],axis=2),  np.expand_dims(test_y[:,:,numApp],axis=2)
             #Filtering zeros of specific appliance and respective aggregated instance
 
             if (self.flgFilterZeros==1):
-                train_y, idxTrain = self.filtering_zeros(train_y)
-                val_y, idxVal   = self.filtering_zeros(val_y)
-                test_y, idxTest  = self.filtering_zeros(test_y)
+                #train_y, idxTrain = self.filtering_zeros(train_y)
+                #val_y, idxVal   = self.filtering_zeros(val_y)
+                #test_y, idxTest  = self.filtering_zeros(test_y)
 
-                train_x = train_x[idxTrain]
-                val_x   = val_x[idxVal]
-                test_x  = test_x[idxTest]
+                train_y, idyTrain=self.filtering_Off(train_y, building,[self.listAppliances[numApp]])
+                val_y, idyVal   = self.filtering_Off(val_y, building,[self.listAppliances[numApp]])
+                test_y, idyTest  = self.filtering_Off(test_y, building,[self.listAppliances[numApp]])
+
+                train_x = train_x[idyTrain]
+                val_x   = val_x[idyVal]
+                test_x  = test_x[idyTest]
             print("Shapes after filtering for one app ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
 
             #Scaling
@@ -209,9 +219,9 @@ class ReaderTS(object):
                 val_x, idxVal   = self.filtering_zeros(val_x)
                 test_x, idxTest  = self.filtering_zeros(test_x)
                 '''
-                train_y, idyTrain=self.filtering_Off(train_y, building)
-                val_y, idyVal   = self.filtering_Off(val_y, building)
-                test_y, idyTest  = self.filtering_Off(test_y, building)
+                train_y, idyTrain=self.filtering_Off(train_y, building,self.listAppliances)
+                val_y, idyVal   = self.filtering_Off(val_y, building,self.listAppliances)
+                test_y, idyTest  = self.filtering_Off(test_y, building,self.listAppliances)
                 #Filtering the same instances in the disaggregated data set
                 train_x = train_x[idyTrain]
                 val_x   = val_x[idyVal]
@@ -268,6 +278,8 @@ class ReaderTS(object):
                 allSetsBuild = []*len(self.listAppliances)
                 X = pickle.load( open(path+"/pickles/"+truFileName+"_X.pickle","rb"))
                 Y = pickle.load( open(path+"/pickles/"+truFileName+"_Y.pickle","rb"))
+                self.meanTrain = X['mean']
+                self.stdTrain = X['std']
                 allSetsBuild = X['train'], X['val'],X['test'], Y['train'], Y['val'], Y['test']
             except (OSError, IOError) as e:
                 if(isMinutes):
@@ -282,11 +294,12 @@ class ReaderTS(object):
                 data = data.loc[data.index > window[0]]
                 allSetsBuild = self.prepare_data(data, numApp,building_i, typeLoad)
 
+                '''
                 with open(path+"/pickles/"+truFileName+"_X.pickle",'wb') as fX:
-                    pickle.dump({'train':allSetsBuild[0],'val':allSetsBuild[1],'test':allSetsBuild[2]}, fX)
+                    pickle.dump({'mean':self.meanTrain,'std':self.stdTrain,'train':allSetsBuild[0],'val':allSetsBuild[1],'test':allSetsBuild[2]}, fX)
                 with open(path+"/pickles/"+truFileName+"_Y.pickle",'wb') as fY:
                     pickle.dump({'train':allSetsBuild[3],'val':allSetsBuild[4],'test':allSetsBuild[5]},fY)
-
+                '''
             totalX['train'] = np.concatenate((totalX['train'], allSetsBuild[0]),axis=0)
             totalX['val'] = np.concatenate((totalX['val'], allSetsBuild[1]),axis=0)
             totalX['test'] = np.concatenate((totalX['test'], allSetsBuild[2]),axis=0)
