@@ -7,7 +7,7 @@ import datetime
 import shutil
 import os
 
-from cle.cle.cost import BiGMM, KLGaussianGaussian, GMMdisag8
+from cle.cle.cost import BiGMM, KLGaussianGaussian, GMMdisagMulti
 from cle.cle.data import Iterator
 from cle.cle.models import Model
 from cle.cle.layers import InitCell
@@ -667,7 +667,7 @@ def main(args):
     #corr_in = corr_temp.reshape((x_shape[0]*x_shape[1], -1))
     #binary_in = binary_temp.reshape((x_shape[0]*x_shape[1], -1))
 
-    recon = GMMdisag8(y_in, theta_mu1_in, theta_sig1_in, coeff1_in,
+    recon = GMMdisagMulti(y_in, theta_mu1_in, theta_sig1_in, coeff1_in,
                       theta_mu2_in, theta_sig2_in, coeff2_in,
                       theta_mu3_in, theta_sig3_in, coeff3_in,
                       theta_mu4_in, theta_sig4_in, coeff4_in,
@@ -772,7 +772,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 50:(lr/5)}
+    lr_iterations = {0:lr}
 
     mainloop = Training(
         name=pkl_name,

@@ -120,6 +120,7 @@ def main(args):
 
     x, mask, y , y_mask = train_data.theano_vars()
     scheduleSamplingMask = T.fvector('schedMask')
+    
     x.name = 'x_original'
     if debug:
         x.tag.test_value = np.zeros((15, batch_size, x_dim), dtype=np.float32)
@@ -311,7 +312,7 @@ def main(args):
     for k, v in updates_val.iteritems():
         k.default_update = v
 
-    def inner_fn(x_t, scheduleSamplingMask, s_tm1):
+    def inner_fn(x_t, s_tm1):
 
         phi_1_t = phi_1.fprop([x_t, s_tm1], params)
         phi_mu_t = phi_mu.fprop([phi_1_t], params)
@@ -333,14 +334,16 @@ def main(args):
         #binary_t = binary.fprop([theta_1_t], params)
 
         pred = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
+
         s_t = rnn.fprop([[x_t, z_1_t], [s_tm1]], params)
+
         #y_pred = dissag_pred.fprop([s_t], params)
 
         return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
         #corr_temp, binary_temp
     ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp,z_t_temp, z_1_temp, theta_1_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
         theano.scan(fn=inner_fn,
-                    sequences=[x_1_temp,scheduleSamplingMask ],
+                    sequences=[x_1_temp ],
                     outputs_info=[s_0, None, None, None, None, None, None,  None, None, None, None, None])
 
     
@@ -469,7 +472,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 20:(lr/10)}#, 150:(lr/10), 270:(lr/100), 370:(lr/1000)
+    lr_iterations = {0:lr, 30:(lr/10)}#, 150:(lr/10), 270:(lr/100), 370:(lr/1000)
 
     mainloop = Training(
         name=pkl_name,
@@ -481,7 +484,6 @@ def main(args):
         n_steps = n_steps,
         extension=extension,
         lr_iterations=lr_iterations
-
     )
     mainloop.run()
 
