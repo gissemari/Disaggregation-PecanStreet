@@ -90,7 +90,7 @@ def main(args):
                                               n_steps= n_steps, stride_train = stride_train, stride_test = stride_test,
                                               trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
-    
+    print(reader.stdTrain, reader.meanTrain)
     instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
@@ -413,6 +413,12 @@ def main(args):
     prediction_val.name = 'generated__'+str(flgAgg)
     mse_val = T.mean((prediction_val - y)**2) # As axis = None is calculated for all
     mae_val = T.mean( T.abs_(prediction_val - y) )
+
+    y_unNormalize = (y * reader.stdTrain) + reader.meanTrain # accessing to just an scalar when loading y_dim=1
+    prediction_valAux = (prediction_val * reader.stdTrain) + reader.meanTrain
+    mse_valUnNorm = T.mean((prediction_valAux - y_unNormalize)**2) # As axis = None is calculated for all
+    mae_valUnNorm = T.mean( T.abs_(prediction_valAux - y_unNormalize) )
+
     mse_val.name = 'mse_val'
     mae_val.name = 'mae_val'
     pred_in_val = y.reshape((y.shape[0]*y.shape[1],-1))
@@ -479,7 +485,7 @@ def main(args):
                               #on_unused_input='ignore',
                               #z=( ,200,1)
                               allow_input_downcast=True,
-                              outputs=[z_t_temp_val, s_temp_val, theta_mu_temp_val, prediction_val, recon_term_val, mse_val, mae_val]#prediction_val, mse_val, mae_val
+                              outputs=[z_t_temp_val, s_temp_val, theta_mu_temp_val, prediction_val, recon_term_val, mse_val, mae_val, mse_valUnNorm, mae_valUnNorm]#prediction_val, mse_val, mae_val
                               ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                               )
     testOutput = []
@@ -523,12 +529,14 @@ def main(args):
     recon_test = this_mean = testOutput[:, 0].mean()
     mse_test = this_mean = testOutput[:, 1].mean()
     mae_test = this_mean = testOutput[:, 2].mean()
+    mseUnNorm_test = this_mean = testOutput[:, 3].mean()
+    maeUnNorm_test = this_mean = testOutput[:, 4].mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
-    fLog.write("logTest,mseTest,maeTest\n")
-    fLog.write("{},{},{}\n\n".format(recon_test,mse_test,mae_test))
+    fLog.write("logTest,mseTest,maeTest, mseTestUnNorm, maeTestUnNorm\n")
+    fLog.write("{},{},{},{},{}\n".format(recon_test,mse_test,mae_test,mseUnNorm_test, maeUnNorm_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     header = "epoch,log,kl,mse,mae\n"
