@@ -1331,6 +1331,15 @@ def main(args):
     mse7_valUnNorm = this_mean = testOutput[:, 25].mean()
     mse8_valUnNorm = this_mean = testOutput[:, 26].mean()
 
+    mae1_valUnNorm = this_mean = testOutput[:, 19].mean()
+    mae2_valUnNorm = this_mean = testOutput[:, 20].mean()
+    mae3_valUnNorm = this_mean = testOutput[:, 21].mean()
+    mae4_valUnNorm = this_mean = testOutput[:, 22].mean()
+    mae5_valUnNorm = this_mean = testOutput[:, 23].mean()
+    mae6_valUnNorm = this_mean = testOutput[:, 24].mean()
+    mae7_valUnNorm = this_mean = testOutput[:, 25].mean()
+    mae8_valUnNorm = this_mean = testOutput[:, 26].mean()
+    
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(appliances)+"\n")

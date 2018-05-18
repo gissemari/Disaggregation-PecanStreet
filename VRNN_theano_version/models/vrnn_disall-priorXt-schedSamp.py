@@ -993,6 +993,14 @@ def main(args):
     mse7_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
     mse8_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
 
+    mae2_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae3_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae4_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae5_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae6_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae7_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+    mae8_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
+
 
     if (y_dim>1):
       theta_mu2_temp_val, theta_sig2_temp_val, coeff2_temp_val, y_pred2_temp_val = restResults_val[:4]
@@ -1297,9 +1305,9 @@ def main(args):
                               allow_input_downcast=True,
                               outputs=[prediction_val, recon_term_val, totaMSE_val, totaMAE_val, 
                                         mse1_val,mse2_val,mse3_val,mse4_val,mse5_val,mse6_val,mse7_val,mse8_val,
-                                        mae1_val,mae2_val,mae3_val,mae4_val,mae5_val,mae6_val,mae7_val,mae8_val
-                                        ,mse1_valUnNorm, mse2_valUnNorm, mse3_valUnNorm, mse4_valUnNorm, mse5_valUnNorm, mse6_valUnNorm, mse7_valUnNorm, mse8_valUnNorm
-                                        ]#prediction_val, mse_val, mae_val
+                                        mae1_val,mae2_val,mae3_val,mae4_val,mae5_val,mae6_val,mae7_val,mae8_val,
+                                        mse1_valUnNorm, mse2_valUnNorm, mse3_valUnNorm, mse4_valUnNorm, mse5_valUnNorm, mse6_valUnNorm, mse7_valUnNorm, mse8_valUnNorm,
+                                        mae1_valUnNorm, mae2_valUnNorm, mae3_valUnNorm, mae4_valUnNorm, mae5_valUnNorm, mae6_valUnNorm, mae7_valUnNorm, mae8_valUnNorm]#prediction_val, mse_val, mae_val
                               ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                               )
     testOutput = []
@@ -1357,6 +1365,15 @@ def main(args):
     mse6_valUnNorm = this_mean = testOutput[:, 24].mean()
     mse7_valUnNorm = this_mean = testOutput[:, 25].mean()
     mse8_valUnNorm = this_mean = testOutput[:, 26].mean()
+
+    mae1_valUnNorm = this_mean = testOutput[:, 19].mean()
+    mae2_valUnNorm = this_mean = testOutput[:, 20].mean()
+    mae3_valUnNorm = this_mean = testOutput[:, 21].mean()
+    mae4_valUnNorm = this_mean = testOutput[:, 22].mean()
+    mae5_valUnNorm = this_mean = testOutput[:, 23].mean()
+    mae6_valUnNorm = this_mean = testOutput[:, 24].mean()
+    mae7_valUnNorm = this_mean = testOutput[:, 25].mean()
+    mae8_valUnNorm = this_mean = testOutput[:, 26].mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
