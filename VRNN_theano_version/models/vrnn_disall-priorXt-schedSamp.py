@@ -74,6 +74,7 @@ def main(args):
     print "learning rate %f" % lr
     print "saving pkl file '%s'" % pkl_name
     print "to the save path '%s'" % save_path
+    print(str(windows))
 
     q_z_dim = 500
     p_z_dim = 500
@@ -946,6 +947,11 @@ def main(args):
     mse1_val = T.mean((y_pred1_temp_val - y[:,:,0].reshape((y.shape[0],y.shape[1],1)))**2)
     mae1_val = T.mean( T.abs_(y_pred1_temp_val - y[:,:,0].reshape((y.shape[0],y.shape[1],1))) )
 
+    totPred = T.sum(y_pred1_temp_val)
+    totReal = T.sum(y[:,:,0])
+    relErr1_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+    propAssigned1_val = 1 - T.sum(T.abs_(y_pred1_temp_val - y[:,:,0].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
+
     y_unNormalize = (y[:,:,0] * reader.stdTrain[0]) + reader.meanTrain[0]
     y_pred1_temp_val = (y_pred1_temp_val * reader.stdTrain[0]) + reader.meanTrain[0]
 
@@ -1001,6 +1007,21 @@ def main(args):
     mae7_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
     mae8_valUnNorm = T.mean(T.zeros((y.shape[0],y.shape[1],1)))
 
+    relErr2_val = T.zeros((1,))
+    relErr3_val = T.zeros((1,))
+    relErr4_val = T.zeros((1,))
+    relErr5_val = T.zeros((1,))
+    relErr6_val = T.zeros((1,))
+    relErr7_val = T.zeros((1,))
+    relErr8_val = T.zeros((1,))
+
+    propAssigned2_val = T.zeros((1,))
+    propAssigned3_val = T.zeros((1,))
+    propAssigned4_val = T.zeros((1,))
+    propAssigned5_val = T.zeros((1,))
+    propAssigned6_val = T.zeros((1,))
+    propAssigned7_val = T.zeros((1,))
+    propAssigned8_val = T.zeros((1,))
 
     if (y_dim>1):
       theta_mu2_temp_val, theta_sig2_temp_val, coeff2_temp_val, y_pred2_temp_val = restResults_val[:4]
@@ -1011,16 +1032,21 @@ def main(args):
       y_pred2_temp_val.name = 'disaggregation2_val'
       prediction_val = T.concatenate([prediction_val, y_pred2_temp_val], axis=2) #before it gets unnormalized
 
-      mse2_valUnNorm = T.mean((y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1)))**2)
-      mae2_valUnNorm = T.mean( T.abs_(y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1))) )
+      mse2_val = T.mean((y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1)))**2)
+      mae2_val = T.mean( T.abs_(y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred2_temp_val)
+      totReal = T.sum(y[:,:,1])
+      relErr2_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned2_val = 1 - T.sum(T.abs_(y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,1] * reader.stdTrain[1]) + reader.meanTrain[1]
       y_pred2_temp_val = (y_pred2_temp_val * reader.stdTrain[1]) + reader.meanTrain[1]
 
       #mse2_val = T.mean((y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
       #mae2_val = T.mean( T.abs_(y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1))) )
-      mse2_val = T.mean((y_pred2_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
-      mae2_val = T.mean( T.abs_(y_pred2_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
+      mse2_valUnNorm = T.mean((y_pred2_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
+      mae2_valUnNorm = T.mean( T.abs_(y_pred2_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
 
       mse2_val.name = 'mse2_val'
       mae2_val.name = 'mae2_val'
@@ -1048,14 +1074,19 @@ def main(args):
       y_pred3_temp_val.name = 'disaggregation3_val'
       prediction_val = T.concatenate([prediction_val, y_pred3_temp_val], axis=2) #before it gets unnormalized
 
-      mse3_valUnNorm = T.mean((y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1)))**2)
-      mae3_valUnNorm = T.mean( T.abs_(y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1))) )
+      mse3_val = T.mean((y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1)))**2)
+      mae3_val = T.mean( T.abs_(y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred3_temp_val)
+      totReal = T.sum(y[:,:,2])
+      relErr3_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned3_val = 1 - T.sum(T.abs_(y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,2] * reader.stdTrain[2]) + reader.meanTrain[2]
       y_pred3_temp_val = (y_pred3_temp_val * reader.stdTrain[2]) + reader.meanTrain[2]
 
-      mse3_val = T.mean((y_pred3_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
-      mae3_val = T.mean( T.abs_(y_pred3_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
+      mse3_valUnNorm = T.mean((y_pred3_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
+      mae3_valUnNorm = T.mean( T.abs_(y_pred3_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
 
       mse3_val.name = 'mse3_val'
       mae3_val.name = 'mae3_val'
@@ -1082,14 +1113,19 @@ def main(args):
       y_pred4_temp_val.name = 'disaggregation4_val'
       prediction_val = T.concatenate([prediction_val, y_pred4_temp_val], axis=2) #before it gets unnormalized
 
-      mse4_valUnNorm = T.mean((y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1)))**2)
-      mae4_valUnNorm = T.mean( T.abs_(y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1))) )
+      mse4_val = T.mean((y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1)))**2)
+      mae4_val = T.mean( T.abs_(y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred4_temp_val)
+      totReal = T.sum(y[:,:,3])
+      relErr4_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned4_val = 1 - T.sum(T.abs_(y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,3] * reader.stdTrain[3]) + reader.meanTrain[3]
       y_pred4_temp_val = (y_pred4_temp_val * reader.stdTrain[3]) + reader.meanTrain[3]
 
-      mse4_val = T.mean((y_pred4_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
-      mae4_val = T.mean( T.abs_(y_pred4_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
+      mse4_valUnNorm = T.mean((y_pred4_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
+      mae4_valUnNorm = T.mean( T.abs_(y_pred4_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
 
       mse4_val.name = 'mse4_val'
       mae4_val.name = 'mae4_val'
@@ -1115,14 +1151,19 @@ def main(args):
       y_pred5_temp_val.name = 'disaggregation5_val'
       prediction_val = T.concatenate([prediction_val, y_pred5_temp_val], axis=2) # before it gets unnormalized
 
-      mse5_valUnNorm = T.mean((y_pred5_temp_val - y[:,:,4].reshape((y.shape[0],y.shape[1],1)))**2)
+      mse5_val = T.mean((y_pred5_temp_val - y[:,:,4].reshape((y.shape[0],y.shape[1],1)))**2)
       mae5_val = T.mean( T.abs_(y_pred5_temp_val - y[:,:,4].reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred5_temp_val)
+      totReal = T.sum(y[:,:,4])
+      relErr5_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned5_val = 1 - T.sum(T.abs_(y_pred5_temp_val - y[:,:,4].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,4] * reader.stdTrain[4]) + reader.meanTrain[4]
       y_pred5_temp_val = (y_pred5_temp_val * reader.stdTrain[4]) + reader.meanTrain[4]
 
-      mse5_val = T.mean((y_pred5_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
-      mae5_val = T.mean( T.abs_(y_pred5_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
+      mse5_valUnNorm = T.mean((y_pred5_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1)))**2) # As axis = None is calculated for all
+      mae5_valUnNorm = T.mean( T.abs_(y_pred5_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
 
       mse5_val.name = 'mse5_val'
       mae5_val.name = 'mae5_val'
@@ -1151,6 +1192,11 @@ def main(args):
 
       mse6_val = T.mean((y_pred6_temp_val - y[:,:,5].reshape((y.shape[0],y.shape[1],1)))**2)
       mae6_val = T.mean( T.abs_(y_pred6_temp_val - y[:,:,5].reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred6_temp_val)
+      totReal = T.sum(y[:,:,5])
+      relErr6_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned6_val = 1 - T.sum(T.abs_(y_pred6_temp_val - y[:,:,5].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,5] * reader.stdTrain[5]) + reader.meanTrain[5]
       y_pred6_temp_val = (y_pred6_temp_val * reader.stdTrain[5]) + reader.meanTrain[5]
@@ -1185,6 +1231,11 @@ def main(args):
       mse7_val = T.mean((y_pred7_temp_val - y[:,:,6].reshape((y.shape[0],y.shape[1],1)))**2)
       mae7_val = T.mean( T.abs_(y_pred7_temp_val - y[:,:,6].reshape((y.shape[0],y.shape[1],1))) )
 
+      totPred = T.sum(y_pred7_temp_val)
+      totReal = T.sum(y[:,:,6])
+      relErr7_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned7_val = 1 - T.sum(T.abs_(y_pred7_temp_val - y[:,:,6].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
+
       y_unNormalize = (y[:,:,6] * reader.stdTrain[6]) + reader.meanTrain[6]
       y_pred7_temp_val = (y_pred7_temp_val * reader.stdTrain[6]) + reader.meanTrain[6]
 
@@ -1218,6 +1269,11 @@ def main(args):
 
       mse8_val = T.mean((y_pred8_temp_val - y[:,:,7].reshape((y.shape[0],y.shape[1],1)))**2)
       mae8_val = T.mean( T.abs_(y_pred8_temp_val - y_unNormalize.reshape((y.shape[0],y.shape[1],1))) )
+
+      totPred = T.sum(y_pred8_temp_val)
+      totReal = T.sum(y[:,:,7])
+      relErr8_val =( totPred -  totReal)/ T.maximum(totPred,totReal)
+      propAssigned8_val = 1 - T.sum(T.abs_(y_pred8_temp_val - y[:,:,7].reshape((y.shape[0],y.shape[1],1))))/(2*T.sum(x))
 
       y_unNormalize = (y[:,:,7] * reader.stdTrain[7]) + reader.meanTrain[7]
       y_pred8_temp_val = (y_pred8_temp_val * reader.stdTrain[7]) + reader.meanTrain[7]
@@ -1307,14 +1363,18 @@ def main(args):
                                         mse1_val,mse2_val,mse3_val,mse4_val,mse5_val,mse6_val,mse7_val,mse8_val,
                                         mae1_val,mae2_val,mae3_val,mae4_val,mae5_val,mae6_val,mae7_val,mae8_val,
                                         mse1_valUnNorm, mse2_valUnNorm, mse3_valUnNorm, mse4_valUnNorm, mse5_valUnNorm, mse6_valUnNorm, mse7_valUnNorm, mse8_valUnNorm,
-                                        mae1_valUnNorm, mae2_valUnNorm, mae3_valUnNorm, mae4_valUnNorm, mae5_valUnNorm, mae6_valUnNorm, mae7_valUnNorm, mae8_valUnNorm]#prediction_val, mse_val, mae_val
-                              ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
+                                        mae1_valUnNorm, mae2_valUnNorm, mae3_valUnNorm, mae4_valUnNorm, mae5_valUnNorm, mae6_valUnNorm, mae7_valUnNorm, mae8_valUnNorm,
+                                        relErr1_val,relErr2_val,relErr3_val,relErr4_val,relErr5_val,relErr6_val,relErr7_val,relErr8_val,
+                                        propAssigned1_val, propAssigned2_val,propAssigned3_val,propAssigned4_val,propAssigned5_val,propAssigned6_val,propAssigned7_val,propAssigned8_val],
+                              updates=updates_val
                               )
     testOutput = []
+    testMetrics2 = []
     numBatchTest = 0
     for batch in data:
       outputGeneration = test_fn(batch[0], batch[2])
-      testOutput.append(outputGeneration[1:])
+      testOutput.append(outputGeneration[1:36])
+      testMetrics2.append(outputGeneration[36:])
       #{0:[4,20], 2:[5,10]} 
       #if (numBatchTest==0):
 
@@ -1335,53 +1395,84 @@ def main(args):
       numBatchTest+=1
 
     testOutput = np.asarray(testOutput)
+    testMetrics2 = np.asarray(testMetrics2)
     print(testOutput.shape)
+    print(testMetrics2.shape)
+
     testOutput[:,1:] = 1000 * testOutput[:,1:] # kwtts a watts
-    recon_test = this_mean = testOutput[:, 0].mean()
-    mse_test = this_mean = testOutput[:, 1].mean()
-    mae_test = this_mean = testOutput[:, 2].mean()
-    mse1_test = this_mean = testOutput[:, 3].mean()
-    mae1_test = this_mean = testOutput[:, 11].mean()
-    mse2_test = this_mean = testOutput[:, 4].mean()
-    mae2_test = this_mean = testOutput[:, 12].mean()
-    mse3_test = this_mean = testOutput[:, 5].mean()
-    mae3_test = this_mean = testOutput[:, 13].mean()
-    mse4_test = this_mean = testOutput[:, 6].mean()
-    mae4_test = this_mean = testOutput[:, 14].mean()
-    mse5_test = this_mean = testOutput[:, 7].mean()
-    mae5_test = this_mean = testOutput[:, 15].mean()
-    mse6_test = this_mean = testOutput[:, 8].mean()
-    mae6_test = this_mean = testOutput[:, 16].mean()
-    mse7_test = this_mean = testOutput[:, 9].mean()
-    mae7_test = this_mean = testOutput[:, 17].mean()
-    mse8_test = this_mean = testOutput[:, 10].mean()
-    mae8_test = this_mean = testOutput[:, 18].mean()
+    recon_test = testOutput[:, 0].mean()
+    mse_test =  testOutput[:, 1].mean()
+    mae_test =  testOutput[:, 2].mean()
+    mse1_test =  testOutput[:, 3].mean()
+    mae1_test =  testOutput[:, 11].mean()
+    mse2_test =  testOutput[:, 4].mean()
+    mae2_test =  testOutput[:, 12].mean()
+    mse3_test =  testOutput[:, 5].mean()
+    mae3_test =  testOutput[:, 13].mean()
+    mse4_test =  testOutput[:, 6].mean()
+    mae4_test =  testOutput[:, 14].mean()
+    mse5_test =  testOutput[:, 7].mean()
+    mae5_test =  testOutput[:, 15].mean()
+    mse6_test =  testOutput[:, 8].mean()
+    mae6_test =  testOutput[:, 16].mean()
+    mse7_test =  testOutput[:, 9].mean()
+    mae7_test =  testOutput[:, 17].mean()
+    mse8_test =  testOutput[:, 10].mean()
+    mae8_test =  testOutput[:, 18].mean()
 
-    mse1_valUnNorm = this_mean = testOutput[:, 19].mean()
-    mse2_valUnNorm = this_mean = testOutput[:, 20].mean()
-    mse3_valUnNorm = this_mean = testOutput[:, 21].mean()
-    mse4_valUnNorm = this_mean = testOutput[:, 22].mean()
-    mse5_valUnNorm = this_mean = testOutput[:, 23].mean()
-    mse6_valUnNorm = this_mean = testOutput[:, 24].mean()
-    mse7_valUnNorm = this_mean = testOutput[:, 25].mean()
-    mse8_valUnNorm = this_mean = testOutput[:, 26].mean()
+    print(testOutput[:,3:11].mean(),testOutput[:,11:19].mean())
 
-    mae1_valUnNorm = this_mean = testOutput[:, 19].mean()
-    mae2_valUnNorm = this_mean = testOutput[:, 20].mean()
-    mae3_valUnNorm = this_mean = testOutput[:, 21].mean()
-    mae4_valUnNorm = this_mean = testOutput[:, 22].mean()
-    mae5_valUnNorm = this_mean = testOutput[:, 23].mean()
-    mae6_valUnNorm = this_mean = testOutput[:, 24].mean()
-    mae7_valUnNorm = this_mean = testOutput[:, 25].mean()
-    mae8_valUnNorm = this_mean = testOutput[:, 26].mean()
+    mse1_valUnNorm =  testOutput[:, 19].mean()
+    mse2_valUnNorm =  testOutput[:, 20].mean()
+    mse3_valUnNorm =  testOutput[:, 21].mean()
+    mse4_valUnNorm =  testOutput[:, 22].mean()
+    mse5_valUnNorm =  testOutput[:, 23].mean()
+    mse6_valUnNorm =  testOutput[:, 24].mean()
+    mse7_valUnNorm =  testOutput[:, 25].mean()
+    mse8_valUnNorm =  testOutput[:, 26].mean()
+
+    mseUnNormAvg_0=(mse1_valUnNorm+mse2_valUnNorm+mse3_valUnNorm+mse4_valUnNorm+mse5_valUnNorm+mse6_valUnNorm+mse7_valUnNorm+mse8_valUnNorm)/8
+    print(mseUnNormAvg_0)
+    mseUnNormAvg = testOutput[:, 19:27].mean()
+
+    mae1_valUnNorm =  testOutput[:, 27].mean()
+    mae2_valUnNorm =  testOutput[:, 28].mean()
+    mae3_valUnNorm =  testOutput[:, 29].mean()
+    mae4_valUnNorm =  testOutput[:, 30].mean()
+    mae5_valUnNorm =  testOutput[:, 31].mean()
+    mae6_valUnNorm =  testOutput[:, 32].mean()
+    mae7_valUnNorm =  testOutput[:, 33].mean()
+    mae8_valUnNorm =  testOutput[:, 34].mean()
+
+    maeUnNormAvg = testOutput[:, 27:].mean()
+
+    relErr1_test = testMetrics2[:,0].mean()
+    relErr2_test = testMetrics2[:,1].mean()
+    relErr3_test = testMetrics2[:,2].mean()
+    relErr4_test = testMetrics2[:,3].mean()
+    relErr5_test = testMetrics2[:,4].mean()
+    relErr6_test = testMetrics2[:,5].mean()
+    relErr7_test = testMetrics2[:,6].mean()
+    relErr8_test = testMetrics2[:,7].mean()
+
+    propAssigned1_test = testMetrics2[:, 8].mean()
+    propAssigned2_test = testMetrics2[:, 9].mean()
+    propAssigned3_test = testMetrics2[:, 10].mean()
+    propAssigned4_test = testMetrics2[:, 11].mean()
+    propAssigned5_test = testMetrics2[:, 12].mean()
+    propAssigned6_test = testMetrics2[:, 13].mean()
+    propAssigned7_test = testMetrics2[:, 14].mean()
+    propAssigned8_test = testMetrics2[:, 15].mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(appliances)+"\n")
     fLog.write(str(windows)+"\n\n")
     fLog.write("logTest,mse1_test,mse2_test,mse3_test,mse4_test,mse5_test, mse6_test,mse7_test,mse8_test,mae1_test,mae2_test,mae3_test,mae4_test,mae5_test, mae6_test,mae7_test,mae8_test,mseTest,maeTest\n")
-    fLog.write(",{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0\n\n".format(mse1_valUnNorm,mse2_valUnNorm,mse3_valUnNorm,mse4_valUnNorm,mse5_valUnNorm, mse6_valUnNorm,mse7_valUnNorm,mse8_valUnNorm))
+    fLog.write("Unnorm,{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},0.0,0.0\n\n".format(mse1_valUnNorm,mse2_valUnNorm,mse3_valUnNorm,mse4_valUnNorm,mse5_valUnNorm, mse6_valUnNorm,mse7_valUnNorm,mse8_valUnNorm,mae1_valUnNorm,mae2_valUnNorm,mae3_valUnNorm,mae4_valUnNorm,mae5_valUnNorm, mae6_valUnNorm,mae7_valUnNorm,mae8_valUnNorm))
     fLog.write("{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n\n".format(recon_test,mse1_test,mse2_test,mse3_test,mse4_test,mse5_test, mse6_test,mse7_test,mse8_test,mae1_test,mae2_test,mae3_test,mae4_test,mae5_test, mae6_test,mae7_test,mae8_test,mse_test,mae_test))
+    fLog.write("relErr1,relErr2,relErr3,relErr4,relErr5,relErr6,relErr7,relErr8,propAssigned1,propAssigned2,propAssigned3,propAssigned4,propAssigned5\n")
+    fLog.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(relErr1_test,relErr2_test,relErr3_test,relErr4_test, relErr5_test,relErr6_test,relErr7_test,relErr8_test,propAssigned1_test,propAssigned2_test,propAssigned3_test, propAssigned4_test,propAssigned5_test,propAssigned6_test,propAssigned7_test,propAssigned8_test))
 
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
