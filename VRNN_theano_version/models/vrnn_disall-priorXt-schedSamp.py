@@ -1399,7 +1399,7 @@ def main(args):
     print(testOutput.shape)
     print(testMetrics2.shape)
 
-    testOutput[:,1:] = 1000 * testOutput[:,1:] # kwtts a watts
+    testOutput[:,19:] = 1000 * testOutput[:,19:] # kwtts a watts
     recon_test = testOutput[:, 0].mean()
     mse_test =  testOutput[:, 1].mean()
     mae_test =  testOutput[:, 2].mean()
