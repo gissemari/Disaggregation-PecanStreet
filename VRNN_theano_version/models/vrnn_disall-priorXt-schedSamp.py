@@ -35,7 +35,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = ['furnace1','refrigerator1', 'clotheswasher1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {2859:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {6990:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -622,8 +622,7 @@ def main(args):
         coeff1_t = coeff1.fprop([theta_1_t], params)
 
         ## prediction 1
-        y_pred1 = GMM_sampleY(theta_mu1_t, theta_sig1_t, coeff1_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
-        y_pred = y_pred1
+        y_pred = GMM_sampleY(theta_mu1_t, theta_sig1_t, coeff1_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
 
         tupleMulti = phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu1_t, theta_sig1_t, coeff1_t, y_pred1
 

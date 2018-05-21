@@ -529,7 +529,7 @@ def main(args):
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
     fLog.write("logTest,mseTest,maeTest, mseTestUnNorm, maeTestUnNorm\n")
-    fLog.write("{},{},{},{},{}\n\n".format(recon_test,mse_test,mae_test,mseUnNorm_test, maeUnNorm_test))
+    fLog.write("{},{},{},{},{}\n".format(recon_test,mse_test,mae_test,mseUnNorm_test, maeUnNorm_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     header = "epoch,log,kl,mse,mae\n"

@@ -526,11 +526,11 @@ def main(args):
 
     testOutput = np.asarray(testOutput)
     print(testOutput.shape)
-    recon_test = this_mean = testOutput[:, 0].mean()
-    mse_test = this_mean = testOutput[:, 1].mean()
-    mae_test = this_mean = testOutput[:, 2].mean()
-    mseUnNorm_test = this_mean = testOutput[:, 3].mean()
-    maeUnNorm_test = this_mean = testOutput[:, 4].mean()
+    recon_test  = testOutput[:, 0].mean()
+    mse_test = testOutput[:, 1].mean()
+    mae_test = testOutput[:, 2].mean()
+    mseUnNorm_test = testOutput[:, 3].mean()
+    maeUnNorm_test = testOutput[:, 4].mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
