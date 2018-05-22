@@ -91,7 +91,7 @@ def main(args):
                                               trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     
-    instancesPlot = {0:[5], 2:[10]} #for now use hard coded instancesPlot for kelly sampling
+    instancesPlot = {0:[5]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
@@ -405,49 +405,16 @@ def main(args):
       nll_upper_bound = nll_upper_bound + mse
     nll_upper_bound.name = 'nll_upper_bound'
 
-    max_x = x.max()
-    mean_x = x.mean()
-    min_x = x.min()
-    max_x.name = 'max_x'
-    mean_x.name = 'mean_x'
-    min_x.name = 'min_x'
+    ############## TEST  ###############
+    theta_mu_in_val = theta_mu_temp_val.reshape((batch_size*n_steps, -1))
+    theta_sig_in_val = theta_sig_temp_val.reshape((batch_size*n_steps, -1))
+    coeff_in_val = coeff_temp_val.reshape((batch_size*n_steps,-1))
 
-    max_theta_mu = theta_mu_in.max()
-    mean_theta_mu = theta_mu_in.mean()
-    min_theta_mu = theta_mu_in.min()
-    max_theta_mu.name = 'max_theta_mu'
-    mean_theta_mu.name = 'mean_theta_mu'
-    min_theta_mu.name = 'min_theta_mu'
 
-    max_theta_sig = theta_sig_in.max()
-    mean_theta_sig = theta_sig_in.mean()
-    min_theta_sig = theta_sig_in.min()
-    max_theta_sig.name = 'max_theta_sig'
-    mean_theta_sig.name = 'mean_theta_sig'
-    min_theta_sig.name = 'min_theta_sig'
-
-    coeff_max = coeff_in.max()
-    coeff_min = coeff_in.min()
-    coeff_mean_max = coeff_in.mean(axis=0).max()
-    coeff_mean_min = coeff_in.mean(axis=0).min()
-    coeff_max.name = 'coeff_max'
-    coeff_min.name = 'coeff_min'
-    coeff_mean_max.name = 'coeff_mean_max'
-    coeff_mean_min.name = 'coeff_mean_min'
-
-    max_phi_sig = phi_sig_temp.max()
-    mean_phi_sig = phi_sig_temp.mean()
-    min_phi_sig = phi_sig_temp.min()
-    max_phi_sig.name = 'max_phi_sig'
-    mean_phi_sig.name = 'mean_phi_sig'
-    min_phi_sig.name = 'min_phi_sig'
-
-    max_prior_sig = prior_sig_temp.max()
-    mean_prior_sig = prior_sig_temp.mean()
-    min_prior_sig = prior_sig_temp.min()
-    max_prior_sig.name = 'max_prior_sig'
-    mean_prior_sig.name = 'mean_prior_sig'
-    min_prior_sig.name = 'min_prior_sig'
+    pred_in = prediction_val.reshape((batch_size*n_steps,-1))
+    recon_val = GMM(pred_in, theta_mu_in_val, theta_sig_in_val, coeff_in_val)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
+    recon_val = recon_val.reshape((batch_size, n_steps))
+    recon_val.name = 'gmm_out_val'
 
     model.inputs = [x, mask, y, y_mask, scheduleSamplingMask]
     model.params = params
@@ -492,7 +459,7 @@ def main(args):
     mainloop.run()
 
     test_fn = theano.function(inputs=[],
-                          outputs=[prediction_val],
+                          outputs=[prediction_val, recon_val],
                           updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                           )
 
@@ -523,10 +490,13 @@ def main(args):
     plt.plot(np.transpose(outputGeneration[0],[1,0,2])[15])
     plt.savefig(save_path+"/vrnn_dis_generated_pred_0-15.ps")
 
+    testLogLike = np.asarray(outputGeneration[1]).mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
+    fLog.write("Test-log-likelihood\n")
+    fLog.write("{}\n".format(testLogLike))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,z2s_dim))
     fLog.write("epoch,log,kl,nll_upper_bound,mse,mae\n")
