@@ -91,7 +91,7 @@ def main(args):
                                               trainPer=0.6, valPer=0.2, testPer=0.2, typeLoad=typeLoad,
                                               flgAggSumScaled = 1, flgFilterZeros = 1)
     print(reader.stdTrain, reader.meanTrain)
-    instancesPlot = {0:[4,20], 2:[5,10]} #for now use hard coded instancesPlot for kelly sampling
+    instancesPlot = {0:[4], 2:[5]} #for now use hard coded instancesPlot for kelly sampling
 
     train_data = Dataport(name='train',
                          prep='normalize',
@@ -306,12 +306,12 @@ def main(args):
         s_t = rnn.fprop([[x_t, z_1_t, pred_1_t], [s_tm1]], params)
         #y_pred = dissag_pred.fprop([s_t], params)
 
-        return s_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred_t#, y_pred
+        return s_t, prior_mu_t, prior_sig_t, theta_mu_t, theta_sig_t, coeff_t, pred_t#, y_pred
         #corr_temp, binary_temp
-    ((s_temp_val, prior_mu_temp_val, prior_sig_temp_val, z_t_temp_val, z_1_temp_val, theta_1_temp_val, theta_mu_temp_val, theta_sig_temp_val, coeff_temp_val, prediction_val), updates_val) =\
+    ((s_temp_val, prior_mu_temp_val, prior_sig_temp_val,  theta_mu_temp_val, theta_sig_temp_val, coeff_temp_val, prediction_val), updates_val) =\
         theano.scan(fn=inner_fn_val,
                     sequences=[x_1_temp],
-                    outputs_info=[s_0, None, None, None, None, None, None,  None, None, None])
+                    outputs_info=[s_0, None, None, None, None, None, None])
 
     for k, v in updates_val.iteritems():
         k.default_update = v
@@ -343,22 +343,19 @@ def main(args):
         s_t = rnn.fprop([[x_t, z_1_t, y_t], [s_tm1]], params)
         #y_pred = dissag_pred.fprop([s_t], params)
 
-        return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t, z_t,  z_1_t, theta_1_t, theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
+        return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t,  theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
         #corr_temp, binary_temp
-    ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp,z_t_temp, z_1_temp, theta_1_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
+    ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
         theano.scan(fn=inner_fn_train,
                     sequences=[x_1_temp, y_1_temp],
-                    outputs_info=[s_0, None, None, None, None, None, None,  None, None, None, None, None])
+                    outputs_info=[s_0, None, None, None, None, None, None, None, None])
 
     
     for k, v in updates.iteritems():
         k.default_update = v
     
-    s_temp = concatenate([s_0[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
+    #s_temp = concatenate([s_0[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
 
-    s_temp.name = 'h_1'#gisse
-    z_1_temp.name = 'z_1'#gisse
-    z_t_temp.name = 'z'
     theta_mu_temp.name = 'theta_mu_temp'
     theta_sig_temp.name = 'theta_sig_temp'
     coeff_temp.name = 'coeff'
@@ -441,7 +438,7 @@ def main(args):
         EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
                    ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
-                          theta_mu_temp, z_t_temp, prediction,s_temp],
+                          theta_mu_temp, prediction,s_temp],
                    indexSep=5,
                    instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
                    data=[Iterator(valid_data, batch_size)],
@@ -467,10 +464,6 @@ def main(args):
     )
     mainloop.run()
 
-    z_t_temp_val.name='z_temp_val'
-    s_temp_val.name='s_temp_val'
-    theta_mu_temp_val.name='mu_temp'
-
     data=Iterator(test_data, batch_size)
 
     test_fn = theano.function(inputs=[x, y],#[x, y],
@@ -478,14 +471,14 @@ def main(args):
                               #on_unused_input='ignore',
                               #z=( ,200,1)
                               allow_input_downcast=True,
-                              outputs=[z_t_temp_val, s_temp_val, theta_mu_temp_val, prediction_val, recon_term_val, mse_val, mae_val, mse_valUnNorm, mae_valUnNorm]#prediction_val, mse_val, mae_val
+                              outputs=[prediction_val, recon_term_val, mse_val, mae_val, mse_valUnNorm, mae_valUnNorm]#prediction_val, mse_val, mae_val
                               ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                               )
     testOutput = []
     numBatchTest = 0
     for batch in data:
       outputGeneration = test_fn(batch[0], batch[2])#(20, 220, 1)
-      testOutput.append(outputGeneration[4:])
+      testOutput.append(outputGeneration[1:])
       # outputGeneration[0].shape #(20, 220, 40)
       #if (numBatchTest<5):
 
@@ -506,7 +499,7 @@ def main(args):
       plt.clf()
       '''
       plt.figure(4)
-      plt.plot(np.transpose(outputGeneration[3],[1,0,2])[4])
+      plt.plot(np.transpose(outputGeneration[0],[1,0,2])[4])
       plt.plot(np.transpose(batch[2],[1,0,2])[4])
       plt.savefig(save_path+"/vrnn_dis_generated{}_RealAndPred_0-4".format(numBatchTest))
       plt.clf()
