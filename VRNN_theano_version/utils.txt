@@ -1,0 +1,7 @@
+export PYTHONPATH=~/Documents/Research/Disaggregation/PecanStreet-dataport:~/Documents/Research/Disaggregation/UK-DALE/VRNN_theano_version/models
+
+############### RECOMMENDATIONS ###############3
+- Comment all the calls to ipdb library in spiedie: 
+(not this anymore because it corrupts the github repository) find /data/home/gbejara1/Research/Disaggregation/UKDALE -type f -exec sed -i 's/import ipdb/# import ipdb/g' {} \;
+
+(no harm in repository) git grep -l 'import ipdb' | xargs sed -i 's/import ipdb/#import ipdb/g'
