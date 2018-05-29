@@ -46,8 +46,8 @@ def main(args):
     #theano.config.exception_verbosity='high'
 
     trial = int(args['trial'])
-    pkl_name = 'vrnn_gmm_%d' % trial
-    channel_name = 'nll_upper_bound'
+    pkl_name = 'dp_dis1-nosch_%d' % trial
+    channel_name = 'mae'
 
     data_path = args['data_path']
     save_path = args['save_path'] #+'/gmm/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")
@@ -70,6 +70,7 @@ def main(args):
     lr = float(args['lr'])
     typeLoad = int(args['typeLoad'])
     debug = int(args['debug'])
+    kSchedSamp = int(args['kSchedSamp'])
 
     print "trial no. %d" % trial
     print "batch size %d" % batch_size
@@ -404,10 +405,10 @@ def main(args):
     mse_val = T.mean((prediction_val - y)**2) # As axis = None is calculated for all
     mae_val = T.mean( T.abs_(prediction_val - y) )
 
-    y_unNormalize = (y * reader.stdTrain) + reader.meanTrain # accessing to just an scalar when loading y_dim=1
-    prediction_valAux = (prediction_val * reader.stdTrain) + reader.meanTrain
-    mse_valUnNorm = T.mean((prediction_valAux - y_unNormalize)**2) # As axis = None is calculated for all
-    mae_valUnNorm = T.mean( T.abs_(prediction_valAux - y_unNormalize) )
+    #y_unNormalize = (y * reader.stdTrain) + reader.meanTrain # accessing to just an scalar when loading y_dim=1
+    #prediction_valAux = (prediction_val * reader.stdTrain) + reader.meanTrain
+    #mse_valUnNorm = T.mean((prediction_valAux - y_unNormalize)**2) # As axis = None is calculated for all
+    #mae_valUnNorm = T.mean( T.abs_(prediction_valAux - y_unNormalize) )
 
     mse_val.name = 'mse_val'
     mae_val.name = 'mae_val'
@@ -438,7 +439,7 @@ def main(args):
         EpochCount(epoch, save_path, header),
         Monitoring(freq=monitoring_freq,
                    ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
-                          theta_mu_temp, prediction,s_temp],
+                          theta_mu_temp, prediction],
                    indexSep=5,
                    instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
                    data=[Iterator(valid_data, batch_size)],
@@ -459,8 +460,8 @@ def main(args):
         outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
         n_steps = n_steps,
         extension=extension,
-        lr_iterations=lr_iterations
-
+        lr_iterations=lr_iterations,
+        k_speedOfconvergence = kSchedSamp
     )
     mainloop.run()
 
@@ -471,7 +472,7 @@ def main(args):
                               #on_unused_input='ignore',
                               #z=( ,200,1)
                               allow_input_downcast=True,
-                              outputs=[prediction_val, recon_term_val, mse_val, mae_val, mse_valUnNorm, mae_valUnNorm]#prediction_val, mse_val, mae_val
+                              outputs=[prediction_val, recon_term_val, mse_val, mae_val]#prediction_val, mse_val, mae_val
                               ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
                               )
     testOutput = []
@@ -515,14 +516,14 @@ def main(args):
     recon_test = testOutput[:, 0].mean()
     mse_test =  testOutput[:, 1].mean()
     mae_test =  testOutput[:, 2].mean()
-    mseUnNorm_test =  testOutput[:, 3].mean()
-    maeUnNorm_test =  testOutput[:, 4].mean()
+    #mseUnNorm_test =  testOutput[:, 3].mean()
+    #maeUnNorm_test =  testOutput[:, 4].mean()
 
     fLog = open(save_path+'/output.csv', 'w')
     fLog.write(str(lr_iterations)+"\n")
     fLog.write(str(windows)+"\n")
     fLog.write("logTest,mseTest,maeTest, mseTestUnNorm, maeTestUnNorm\n")
-    fLog.write("{},{},{},{},{}\n".format(recon_test,mse_test,mae_test,mseUnNorm_test, maeUnNorm_test))
+    fLog.write("{},{},{}\n".format(recon_test,mse_test,mae_test))
     fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
     fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
     header = "epoch,log,kl,mse,mae\n"
