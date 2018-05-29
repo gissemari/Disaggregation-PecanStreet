@@ -84,4 +84,4 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
 
     if (numApps==-1):
         return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_val,axis=2), y_val, np.expand_dims(x_test,axis=2), y_test, reader  
-    return np.expand_dims(x_train,axis=2), np.expand_dims(y_train,axis=2), np.expand_dims(x_val,axis=2), np.expand_dims(y_val,axis=2), np.expand_dims(x_test,axis=2), np.expand_dims(y_test,axis=2), reader
+    return np.expand_dims(x_train,axis=2), y_train, np.expand_dims(x_val,axis=2), y_val, np.expand_dims(x_test,axis=2), y_test, reader

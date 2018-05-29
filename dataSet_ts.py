@@ -202,11 +202,12 @@ class ReaderTS(object):
             #Scaling
             lenApps=1
             
-            train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
-            if (self.flgAggSumScaled==1):
-                pass # See the way to scale all x sets with respect to train_y
-            train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
-            
+            if (self.flgScaling==1):
+                train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
+                if (self.flgAggSumScaled==1):
+                    pass # See the way to scale all x sets with respect to train_y
+                train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
+                
         else:
             lenApps = len(self.listAppliances)
             shapeY = [-1,self.time_steps, lenApps]
@@ -228,14 +229,15 @@ class ReaderTS(object):
                 test_x  = test_x[idyTest]
 
             #Scaled each disaggregated separetly and recalculating aggregated consumption
-            train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
+            if (self.flgScaling==1):
+                train_y, val_y, test_y = self.scaling(train_y, val_y, test_y, shapeY, thirdDim = lenApps)
 
-            if (self.flgAggSumScaled ==1):
-                train_x = np.sum(train_y, axis=2)
-                val_x   = np.sum(val_y, axis=2)
-                test_x  = np.sum(test_y, axis=2)
-            else:
-                train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
+                if (self.flgAggSumScaled ==1):
+                    train_x = np.sum(train_y, axis=2)
+                    val_x   = np.sum(val_y, axis=2)
+                    test_x  = np.sum(test_y, axis=2)
+                else:
+                    train_x, val_x, test_x = self.scaling(train_x, val_x, test_x, shapeX, thirdDim = 1)
             print("Shapes after filtering all at once ",train_x.shape, val_x.shape, test_x.shape, train_y.shape, val_y.shape, test_y.shape)
         return [train_x, val_x, test_x, train_y, val_y, test_y]
 
@@ -257,7 +259,7 @@ class ReaderTS(object):
         
         if (numApp!=-1):
             lenApps = 1
-            shapeY = [0,self.time_steps]
+            shapeY = [0,self.time_steps,lenApps]
         totalX = {'train':np.empty([0,self.time_steps]), 
                     'val':np.empty([0,self.time_steps]),
                     'test':np.empty([0,self.time_steps])}
@@ -300,14 +302,15 @@ class ReaderTS(object):
                 with open(path+"/pickles/"+truFileName+"_Y.pickle",'wb') as fY:
                     pickle.dump({'train':allSetsBuild[3],'val':allSetsBuild[4],'test':allSetsBuild[5]},fY)
                 '''
+            print("One more building ", totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
+            print(allSetsBuild[0].shape,allSetsBuild[3].shape)
             totalX['train'] = np.concatenate((totalX['train'], allSetsBuild[0]),axis=0)
             totalX['val'] = np.concatenate((totalX['val'], allSetsBuild[1]),axis=0)
             totalX['test'] = np.concatenate((totalX['test'], allSetsBuild[2]),axis=0)
             totalY['train'] = np.concatenate((totalY['train'], allSetsBuild[3]),axis=0)
             totalY['val'] = np.concatenate((totalY['val'], allSetsBuild[4]),axis=0)
             totalY['test'] = np.concatenate((totalY['test'], allSetsBuild[5]),axis=0)
-            print("One more building ", totalX['train'].shape, totalX['val'].shape, totalX['test'].shape, totalY['train'].shape, totalY['val'].shape, totalY['test'].shape)
-
+            
 
             #os.makedirs(os.path.dirname(cwd+"/pickles/"+truFileName))
             #os.makedirs(os.path.dirname(cwd+"/pickles/"+truFileName))
