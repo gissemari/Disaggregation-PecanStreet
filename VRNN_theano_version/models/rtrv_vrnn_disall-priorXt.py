@@ -956,7 +956,7 @@ def main(args):
         lr_iterations=lr_iterations
     )
     '''
-    fmodel = open('vrnn_gmm_1_best.pkl', 'rb')
+    fmodel = open('disall.pkl', 'rb')
     mainloop = cPickle.load(fmodel)
     fmodel.close()
 

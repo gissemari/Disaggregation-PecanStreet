@@ -472,7 +472,8 @@ def main(args):
         k_speedOfconvergence=kSchedSamp
     )"""
 
-    fmodel = open('vrnn_gmm_1_best.pkl', 'rb')
+    #pickle is from experiment 18-05-29_00-48_app6
+    fmodel = open('dis1.pkl', 'rb')
     mainloop = cPickle.load(fmodel)
     fmodel.close()
 
