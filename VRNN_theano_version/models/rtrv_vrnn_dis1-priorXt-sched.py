@@ -139,13 +139,49 @@ def main(args):
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
 
+    #pickle is from experiment 18-05-29_00-48_app6
+    fmodel = open('dp_dis1-sch_1.pkl', 'rb')
+    mainloop = cPickle.load(fmodel)
+    fmodel.close()
+
+    print (mainloop)
+    attrs = vars(mainloop)
+    print ', '.join("%s: %s" % item for item in attrs.items())
+
+    print (type(mainloop.model.nodes[1]))
+    print (type(mainloop.model.params))
+
+    lr
+    '''
+    for node in mainloop.model.nodes:
+      print("Name:", node.name, "Parent:", node.parent, "Unit:",node.unit,"init_W:", node.init_W, "init_b:", node.init_b)
+
+    for param in mainloop.model.params:
+      print(type(param),param)
+    '''
+
+    '''
+    mainloop.restore(
+       name=pkl_name,
+        data=Iterator(train_data, batch_size),
+        model=model,
+        optimizer=optimizer,
+        cost=nll_upper_bound,
+        outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
+        n_steps = n_steps,
+        extension=extension,
+        lr_iterations=lr_iterations,
+        k_speedOfconvergence=kSchedSamp
+      )
+  '''
+
     x_1 = FullyConnectedLayer(name='x_1',
                               parent=['x_t'],
                               parent_dim=[x_dim],
                               nout=x2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
+                              init_W=mainloop.model.nodes[1].init_W,
+                              init_b=mainloop.model.nodes[1].init_b)
 
     y_1 = FullyConnectedLayer(name='y_1',
                               parent=['y_t'],
@@ -277,12 +313,13 @@ def main(args):
              prior_1, prior_mu, prior_sig,
              theta_1, theta_mu, theta_sig, coeff]#, corr, binary
 
-    params = OrderedDict()
+    params = mainloop.model.params
 
+    
     for node in nodes:
-        if node.initialize() is not None:
+        if node.initialize() is not None: #gives the W that was feed in the class - retrieved ones
             params.update(node.initialize())
-
+    
     params = init_tparams(params)
 
     s_0 = rnn.get_init_state(batch_size)
@@ -472,23 +509,13 @@ def main(args):
         k_speedOfconvergence=kSchedSamp
     )"""
 
-    #pickle is from experiment 18-05-29_00-48_app6
-    fmodel = open('dis1.pkl', 'rb')
-    mainloop = cPickle.load(fmodel)
-    fmodel.close()
-
     mainloop.restore(
-       name=pkl_name,
         data=Iterator(train_data, batch_size),
-        model=model,
-        optimizer=optimizer,
         cost=nll_upper_bound,
-        outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
-        n_steps = n_steps,
-        extension=extension,
-        lr_iterations=lr_iterations,
-        k_speedOfconvergence=kSchedSamp
+        model=model,
+        optimizer=mainloop.optimizer
       )
+
 
     mainloop.run()
 
