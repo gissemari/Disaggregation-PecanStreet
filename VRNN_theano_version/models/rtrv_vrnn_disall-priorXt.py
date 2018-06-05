@@ -141,6 +141,15 @@ def main(args):
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
 
+    """rnn = LSTM(name='rnn',
+               parent=['x_1', 'z_1', 'y_1'],
+               parent_dim=[x2s_dim, z2s_dim, y2s_dim],
+               nout=rnn_dim,
+               unit='tanh',
+               init_W=mainloop.model.nodes[0].init_W,
+               init_U=mainloop.model.nodes[0].init_U,
+               init_b=mainloop.model.nodes[0].init_b)
+
     x_1 = FullyConnectedLayer(name='x_1',
                               parent=['x_t'],
                               parent_dim=[x_dim],
@@ -164,15 +173,6 @@ def main(args):
                               unit='relu',
                               init_W=init_W,
                               init_b=init_b)
-
-    rnn = LSTM(name='rnn',
-               parent=['x_1', 'z_1', 'y_1'],
-               parent_dim=[x2s_dim, z2s_dim, y2s_dim],
-               nout=rnn_dim,
-               unit='tanh',
-               init_W=init_W,
-               init_U=init_U,
-               init_b=init_b)
 
     phi_1 = FullyConnectedLayer(name='phi_1',
                                 parent=['x_1', 's_tm1','y_1'],
@@ -355,52 +355,63 @@ def main(args):
                                 nout=k,
                                 unit='softmax',
                                 init_W=init_W,
-                                init_b=init_b)
+                                init_b=init_b)"""
 
-    corr = FullyConnectedLayer(name='corr',
-                               parent=['theta_1'],
-                               parent_dim=[p_x_dim],
-                               nout=k,
-                               unit='tanh',
-                               init_W=init_W,
-                               init_b=init_b)
+    #from experiment 18-05-31_18-48
+    fmodel = open('disall.pkl', 'rb')
+    mainloop = cPickle.load(fmodel)
+    fmodel.close()
 
-    binary = FullyConnectedLayer(name='binary',
-                                 parent=['theta_1'],
-                                 parent_dim=[p_x_dim],
-                                 nout=1,
-                                 unit='sigmoid',
-                                 init_W=init_W,
-                                 init_b=init_b)
+    #define layers
+    rnn = mainloop.model.nodes[0]
+    x_1 = mainloop.model.nodes[1]
+    y_1 = mainloop.model.nodes[2]
+    z_1 = mainloop.model.nodes[3]
+    phi_1 = mainloop.model.nodes[4]
+    phi_mu = mainloop.model.nodes[5]
+    phi_sig = mainloop.model.nodes[6]
+    prior_1 = mainloop.model.nodes[7]
+    prior_mu = mainloop.model.nodes[8]
+    prior_sig = mainloop.model.nodes[9]
+    theta_1 = mainloop.model.nodes[10]
+    theta_mu1 = mainloop.model.nodes[11]
+    theta_sig1 = mainloop.model.nodes[12]
+    coeff1 = mainloop.model.nodes[13]
 
     nodes = [rnn,
              x_1, y_1,z_1, #dissag_pred,
              phi_1, phi_mu, phi_sig,
              prior_1, prior_mu, prior_sig,
-             theta_1, theta_mu1,theta_sig1,coeff1]
+             theta_1, theta_mu1, theta_sig1, coeff1]
+
+    params = mainloop.model.params
 
     dynamicOutput = [None, None, None, None, None, None, None, None]
     #dynamicOutput_val = [None, None, None, None, None, None,None,  None, None]
     if (y_dim>1):
+      theta_mu2 = mainloop.model.nodes[14]
+      theta_sig2 = mainloop.model.nodes[15]
+      coeff2 = mainloop.model.nodes[16]
       nodes = nodes + [theta_mu2, theta_sig2, coeff2]
       dynamicOutput = dynamicOutput+[None, None, None, None] #mu, sig, coef and pred
     if (y_dim>2):
+      theta_mu3 = mainloop.model.nodes[17]
+      theta_sig3 = mainloop.model.nodes[18]
+      coeff3 = mainloop.model.nodes[19]
       nodes = nodes + [theta_mu3, theta_sig3, coeff3]
       dynamicOutput = dynamicOutput +[None, None, None, None]
     if (y_dim>3):
+      theta_mu4 = mainloop.model.nodes[20]
+      theta_sig4 = mainloop.model.nodes[21]
+      coeff4 = mainloop.model.nodes[22]
       nodes = nodes + [theta_mu4, theta_sig4, coeff4]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>4):
+      theta_mu5 = mainloop.model.nodes[23]
+      theta_sig5 = mainloop.model.nodes[24]
+      coeff5 = mainloop.model.nodes[25]
       nodes = nodes + [theta_mu5, theta_sig5, coeff5]
       dynamicOutput = dynamicOutput + [None, None, None, None]
-
-    params = OrderedDict()
-
-    for node in nodes:
-        if node.initialize() is not None:
-            params.update(node.initialize())
-
-    params = init_tparams(params)
 
     s_0 = rnn.get_init_state(batch_size)
 
@@ -956,10 +967,6 @@ def main(args):
         lr_iterations=lr_iterations
     )
     '''
-    fmodel = open('disall.pkl', 'rb')
-    mainloop = cPickle.load(fmodel)
-    fmodel.close()
-
     mainloop.restore(
         name=pkl_name,
         data=Iterator(train_data, batch_size),

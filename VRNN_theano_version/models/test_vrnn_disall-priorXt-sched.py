@@ -458,9 +458,6 @@ def main(args):
     mainloop = cPickle.load(fmodel)
     fmodel.close()
 
-    for node in mainloop.model.nodes:
-      print(node.name)
-
     #define layers
     rnn = mainloop.model.nodes[0]
     x_1 = mainloop.model.nodes[1]
@@ -476,9 +473,6 @@ def main(args):
     theta_mu1 = mainloop.model.nodes[11]
     theta_sig1 = mainloop.model.nodes[12]
     coeff1 = mainloop.model.nodes[13]
-    theta_mu2 = mainloop.model.nodes[14]
-    theta_sig2 = mainloop.model.nodes[15]
-    coeff2 = mainloop.model.nodes[16]
 
     nodes = [rnn,
              x_1, y_1,z_1, #dissag_pred,
@@ -489,25 +483,47 @@ def main(args):
     params = mainloop.model.params
 
     dynamicOutput = [None, None, None, None, None, None, None, None]
+    #dynamicOutput_val = [None, None, None, None, None, None,None,  None, None]
     if (y_dim>1):
+      theta_mu2 = mainloop.model.nodes[14]
+      theta_sig2 = mainloop.model.nodes[15]
+      coeff2 = mainloop.model.nodes[16]
       nodes = nodes + [theta_mu2, theta_sig2, coeff2]
       dynamicOutput = dynamicOutput+[None, None, None, None] #mu, sig, coef and pred
     if (y_dim>2):
+      theta_mu3 = mainloop.model.nodes[17]
+      theta_sig3 = mainloop.model.nodes[18]
+      coeff3 = mainloop.model.nodes[19]
       nodes = nodes + [theta_mu3, theta_sig3, coeff3]
       dynamicOutput = dynamicOutput +[None, None, None, None]
     if (y_dim>3):
+      theta_mu4 = mainloop.model.nodes[20]
+      theta_sig4 = mainloop.model.nodes[21]
+      coeff4 = mainloop.model.nodes[22]
       nodes = nodes + [theta_mu4, theta_sig4, coeff4]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>4):
+      theta_mu5 = mainloop.model.nodes[23]
+      theta_sig5 = mainloop.model.nodes[24]
+      coeff5 = mainloop.model.nodes[25]
       nodes = nodes + [theta_mu5, theta_sig5, coeff5]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>5):
+      theta_mu6 = mainloop.model.nodes[26]
+      theta_sig6 = mainloop.model.nodes[27]
+      coeff6 = mainloop.model.nodes[28]
       nodes = nodes + [theta_mu6, theta_sig6, coeff6]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>6):
+      theta_mu7 = mainloop.model.nodes[29]
+      theta_sig7 = mainloop.model.nodes[30]
+      coeff7 = mainloop.model.nodes[31]
       nodes = nodes + [theta_mu7, theta_sig7, coeff7]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>7):
+      theta_mu8 = mainloop.model.nodes[32]
+      theta_sig8 = mainloop.model.nodes[33]
+      coeff8 = mainloop.model.nodes[34]
       nodes = nodes + [theta_mu8, theta_sig8, coeff8]
       dynamicOutput = dynamicOutput + [None, None, None, None]
 

@@ -141,54 +141,54 @@ def main(args):
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
 
+    """rnn = LSTM(name='rnn',
+     parent=['x_1', 'z_1', 'y_1'],
+     parent_dim=[x2s_dim, z2s_dim, y2s_dim],
+     nout=rnn_dim,
+     unit='tanh',
+     init_W=mainloop.model.nodes[0].init_W,
+     init_U=mainloop.model.nodes[0].init_U,
+     init_b=mainloop.model.nodes[0].init_b)
+
     x_1 = FullyConnectedLayer(name='x_1',
                               parent=['x_t'],
                               parent_dim=[x_dim],
                               nout=x2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
+                              init_W=mainloop.model.nodes[1].init_W,
+                              init_b=mainloop.model.nodes[1].init_b)
 
     y_1 = FullyConnectedLayer(name='y_1',
                               parent=['y_t'],
                               parent_dim=[y_dim],
                               nout=y2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
+                              init_W=mainloop.model.nodes[2].init_W,
+                              init_b=mainloop.model.nodes[2].init_b)
 
     z_1 = FullyConnectedLayer(name='z_1',
                               parent=['z_t'],
                               parent_dim=[z_dim],
                               nout=z2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
-
-    rnn = LSTM(name='rnn',
-               parent=['x_1', 'z_1', 'y_1'],
-               parent_dim=[x2s_dim, z2s_dim, y2s_dim],
-               nout=rnn_dim,
-               unit='tanh',
-               init_W=init_W,
-               init_U=init_U,
-               init_b=init_b)
+                              init_W=mainloop.model.nodes[3].init_W,
+                              init_b=mainloop.model.nodes[3].init_b)
 
     phi_1 = FullyConnectedLayer(name='phi_1',
                                 parent=['x_1', 's_tm1','y_1'],
                                 parent_dim=[x2s_dim, rnn_dim, y2s_dim],
                                 nout=q_z_dim,
                                 unit='relu',
-                                init_W=init_W,
-                                init_b=init_b)
+                                init_W=mainloop.model.nodes[4].init_W,
+                                init_b=mainloop.model.nodes[4].init_b)
 
     phi_mu = FullyConnectedLayer(name='phi_mu',
                                  parent=['phi_1'],
                                  parent_dim=[q_z_dim],
                                  nout=z_dim,
                                  unit='linear',
-                                 init_W=init_W,
-                                 init_b=init_b)
+                                 init_W=mainloop.model.nodes[5].init_W,
+                                 init_b=mainloop.model.nodes[5].init_b)
 
     phi_sig = FullyConnectedLayer(name='phi_sig',
                                   parent=['phi_1'],
@@ -196,24 +196,24 @@ def main(args):
                                   nout=z_dim,
                                   unit='softplus',
                                   cons=1e-4,
-                                  init_W=init_W,
-                                  init_b=init_b_sig)
+                                  init_W=mainloop.model.nodes[6].init_W,
+                                  init_b=mainloop.model.nodes[6].init_b)
 
     prior_1 = FullyConnectedLayer(name='prior_1',
                                   parent=['x_1','s_tm1'],
                                   parent_dim=[x2s_dim,rnn_dim],
                                   nout=p_z_dim,
                                   unit='relu',
-                                  init_W=init_W,
-                                  init_b=init_b)
+                                  init_W=mainloop.model.nodes[7].init_W,
+                                  init_b=mainloop.model.nodes[7].init_b)
 
     prior_mu = FullyConnectedLayer(name='prior_mu',
                                    parent=['prior_1'],
                                    parent_dim=[p_z_dim],
                                    nout=z_dim,
                                    unit='linear',
-                                   init_W=init_W,
-                                   init_b=init_b)
+                                   init_W=mainloop.model.nodes[8].init_W,
+                                   init_b=mainloop.model.nodes[8].init_b)
 
     prior_sig = FullyConnectedLayer(name='prior_sig',
                                     parent=['prior_1'],
@@ -221,24 +221,41 @@ def main(args):
                                     nout=z_dim,
                                     unit='softplus',
                                     cons=1e-4,
-                                    init_W=init_W,
-                                    init_b=init_b_sig)
+                                    init_W=mainloop.model.nodes[9].init_W,
+                                    init_b=mainloop.model.nodes[9].init_b)
 
     theta_1 = FullyConnectedLayer(name='theta_1',
                                   parent=['z_1', 's_tm1'],
                                   parent_dim=[z2s_dim, rnn_dim],
                                   nout=p_x_dim,
                                   unit='relu',
-                                  init_W=init_W,
-                                  init_b=init_b)
+                                  init_W=mainloop.model.nodes[10].init_W,
+                                  init_b=mainloop.model.nodes[10].init_b)
 
     theta_mu1 = FullyConnectedLayer(name='theta_mu1',
                                    parent=['theta_1'],
                                    parent_dim=[p_x_dim],
                                    nout=target_dim,
                                    unit='linear',
-                                   init_W=init_W,
-                                   init_b=init_b)
+                                   init_W=mainloop.model.nodes[11].init_W,
+                                   init_b=mainloop.model.nodes[11].init_b)
+
+    theta_sig1 = FullyConnectedLayer(name='theta_sig1',
+                                    parent=['theta_1'],
+                                    parent_dim=[p_x_dim],
+                                    nout=target_dim,
+                                    unit='softplus',
+                                    cons=1e-4,
+                                    init_W=mainloop.model.nodes[12].init_W,
+                                    init_b=mainloop.model.nodes[12].init_b)
+
+    coeff1 = FullyConnectedLayer(name='coeff1',
+                                parent=['theta_1'],
+                                parent_dim=[p_x_dim],
+                                nout=k,
+                                unit='softmax',
+                                init_W=mainloop.model.nodes[13].init_W,
+                                init_b=mainloop.model.nodes[13].init_b)
 
     if (y_dim>1):
       theta_mu2 = FullyConnectedLayer(name='theta_mu2',
@@ -246,9 +263,29 @@ def main(args):
                                      parent_dim=[p_x_dim],
                                      nout=target_dim,
                                      unit='linear',
-                                     init_W=init_W,
-                                     init_b=init_b)
+                                     init_W=mainloop.model.nodes[14].init_W,
+                                     init_b=mainloop.model.nodes[14].init_b)
 
+    if (y_dim>1):
+      theta_sig2 = FullyConnectedLayer(name='theta_sig2',
+                                      parent=['theta_1'],
+                                      parent_dim=[p_x_dim],
+                                      nout=target_dim,
+                                      unit='softplus',
+                                      cons=1e-4,
+                                      init_W=mainloop.model.nodes[15].init_W,
+                                      init_b=mainloop.model.nodes[15].init_b)
+
+    if (y_dim>1):
+      coeff2 = FullyConnectedLayer(name='coeff2',
+                                  parent=['theta_1'],
+                                  parent_dim=[p_x_dim],
+                                  nout=k,
+                                  unit='softmax',
+                                  init_W=mainloop.model.nodes[16].init_W,
+                                  init_b=mainloop.model.nodes[16].init_b)
+
+    #not there
     if (y_dim>2):
       theta_mu3 = FullyConnectedLayer(name='theta_mu3',
                                      parent=['theta_1'],
@@ -302,25 +339,6 @@ def main(args):
                                      unit='linear',
                                      init_W=init_W,
                                      init_b=init_b)
-
-    theta_sig1 = FullyConnectedLayer(name='theta_sig1',
-                                    parent=['theta_1'],
-                                    parent_dim=[p_x_dim],
-                                    nout=target_dim,
-                                    unit='softplus',
-                                    cons=1e-4,
-                                    init_W=init_W,
-                                    init_b=init_b_sig)
-
-    if (y_dim>1):
-      theta_sig2 = FullyConnectedLayer(name='theta_sig2',
-                                      parent=['theta_1'],
-                                      parent_dim=[p_x_dim],
-                                      nout=target_dim,
-                                      unit='softplus',
-                                      cons=1e-4,
-                                      init_W=init_W,
-                                      init_b=init_b_sig)
 
     if (y_dim>2):
       theta_sig3 = FullyConnectedLayer(name='theta_sig3',
@@ -382,23 +400,6 @@ def main(args):
                                       init_W=init_W,
                                       init_b=init_b_sig)
 
-    coeff1 = FullyConnectedLayer(name='coeff1',
-                                parent=['theta_1'],
-                                parent_dim=[p_x_dim],
-                                nout=k,
-                                unit='softmax',
-                                init_W=init_W,
-                                init_b=init_b)
-
-    if (y_dim>1):
-      coeff2 = FullyConnectedLayer(name='coeff2',
-                                  parent=['theta_1'],
-                                  parent_dim=[p_x_dim],
-                                  nout=k,
-                                  unit='softmax',
-                                  init_W=init_W,
-                                  init_b=init_b)
-
     if (y_dim>2):
       coeff3 = FullyConnectedLayer(name='coeff3',
                                   parent=['theta_1'],
@@ -451,23 +452,28 @@ def main(args):
                                   nout=k,
                                   unit='softmax',
                                   init_W=init_W,
-                                  init_b=init_b)
+                                  init_b=init_b)"""
 
-    corr = FullyConnectedLayer(name='corr',
-                               parent=['theta_1'],
-                               parent_dim=[p_x_dim],
-                               nout=k,
-                               unit='tanh',
-                               init_W=init_W,
-                               init_b=init_b)
+    #from experiment 18-05-31_18-48
+    fmodel = open('disall.pkl', 'rb')
+    mainloop = cPickle.load(fmodel)
+    fmodel.close()
 
-    binary = FullyConnectedLayer(name='binary',
-                                 parent=['theta_1'],
-                                 parent_dim=[p_x_dim],
-                                 nout=1,
-                                 unit='sigmoid',
-                                 init_W=init_W,
-                                 init_b=init_b)
+    #define layers
+    rnn = mainloop.model.nodes[0]
+    x_1 = mainloop.model.nodes[1]
+    y_1 = mainloop.model.nodes[2]
+    z_1 = mainloop.model.nodes[3]
+    phi_1 = mainloop.model.nodes[4]
+    phi_mu = mainloop.model.nodes[5]
+    phi_sig = mainloop.model.nodes[6]
+    prior_1 = mainloop.model.nodes[7]
+    prior_mu = mainloop.model.nodes[8]
+    prior_sig = mainloop.model.nodes[9]
+    theta_1 = mainloop.model.nodes[10]
+    theta_mu1 = mainloop.model.nodes[11]
+    theta_sig1 = mainloop.model.nodes[12]
+    coeff1 = mainloop.model.nodes[13]
 
     nodes = [rnn,
              x_1, y_1,z_1, #dissag_pred,
@@ -475,36 +481,53 @@ def main(args):
              prior_1, prior_mu, prior_sig,
              theta_1, theta_mu1, theta_sig1, coeff1]
 
+    params = mainloop.model.params
+
     dynamicOutput = [None, None, None, None, None, None, None, None]
+    #dynamicOutput_val = [None, None, None, None, None, None,None,  None, None]
     if (y_dim>1):
+      theta_mu2 = mainloop.model.nodes[14]
+      theta_sig2 = mainloop.model.nodes[15]
+      coeff2 = mainloop.model.nodes[16]
       nodes = nodes + [theta_mu2, theta_sig2, coeff2]
       dynamicOutput = dynamicOutput+[None, None, None, None] #mu, sig, coef and pred
     if (y_dim>2):
+      theta_mu3 = mainloop.model.nodes[17]
+      theta_sig3 = mainloop.model.nodes[18]
+      coeff3 = mainloop.model.nodes[19]
       nodes = nodes + [theta_mu3, theta_sig3, coeff3]
       dynamicOutput = dynamicOutput +[None, None, None, None]
     if (y_dim>3):
+      theta_mu4 = mainloop.model.nodes[20]
+      theta_sig4 = mainloop.model.nodes[21]
+      coeff4 = mainloop.model.nodes[22]
       nodes = nodes + [theta_mu4, theta_sig4, coeff4]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>4):
+      theta_mu5 = mainloop.model.nodes[23]
+      theta_sig5 = mainloop.model.nodes[24]
+      coeff5 = mainloop.model.nodes[25]
       nodes = nodes + [theta_mu5, theta_sig5, coeff5]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>5):
+      theta_mu6 = mainloop.model.nodes[26]
+      theta_sig6 = mainloop.model.nodes[27]
+      coeff6 = mainloop.model.nodes[28]
       nodes = nodes + [theta_mu6, theta_sig6, coeff6]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>6):
+      theta_mu7 = mainloop.model.nodes[29]
+      theta_sig7 = mainloop.model.nodes[30]
+      coeff7 = mainloop.model.nodes[31]
       nodes = nodes + [theta_mu7, theta_sig7, coeff7]
       dynamicOutput = dynamicOutput + [None, None, None, None]
     if (y_dim>7):
+      theta_mu8 = mainloop.model.nodes[32]
+      theta_sig8 = mainloop.model.nodes[33]
+      coeff8 = mainloop.model.nodes[34]
       nodes = nodes + [theta_mu8, theta_sig8, coeff8]
       dynamicOutput = dynamicOutput + [None, None, None, None]
 
-    params = OrderedDict()
-
-    for node in nodes:
-        if node.initialize() is not None:
-            params.update(node.initialize())
-
-    params = init_tparams(params)
 
     s_0 = rnn.get_init_state(batch_size)
 
@@ -1334,11 +1357,6 @@ def main(args):
         lr_iterations=lr_iterations,
         k_speedOfconvergence = kSchedSamp
     )"""
-
-    #from experiment 18-05-31_18-48
-    fmodel = open('disall.pkl', 'rb')
-    mainloop = cPickle.load(fmodel)
-    fmodel.close()
 
     mainloop.restore(
       name=pkl_name,
