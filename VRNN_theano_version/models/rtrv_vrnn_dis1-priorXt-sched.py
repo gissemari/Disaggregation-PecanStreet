@@ -139,19 +139,15 @@ def main(args):
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
 
-    #pickle is from experiment 18-05-29_00-48_app6
-    fmodel = open('dp_dis1-sch_1.pkl', 'rb')
-    mainloop = cPickle.load(fmodel)
-    fmodel.close()
-
-    print (mainloop)
+    """ print (mainloop)
     attrs = vars(mainloop)
     print ', '.join("%s: %s" % item for item in attrs.items())
 
     print (type(mainloop.model.nodes[1]))
-    print (type(mainloop.model.params))
+    print (type(mainloop.model.params))"""
 
-    lr
+    #for node in mainloop.model.nodes:
+    #  print(node.name)
     '''
     for node in mainloop.model.nodes:
       print("Name:", node.name, "Parent:", node.parent, "Unit:",node.unit,"init_W:", node.init_W, "init_b:", node.init_b)
@@ -160,20 +156,14 @@ def main(args):
       print(type(param),param)
     '''
 
-    '''
-    mainloop.restore(
-       name=pkl_name,
-        data=Iterator(train_data, batch_size),
-        model=model,
-        optimizer=optimizer,
-        cost=nll_upper_bound,
-        outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
-        n_steps = n_steps,
-        extension=extension,
-        lr_iterations=lr_iterations,
-        k_speedOfconvergence=kSchedSamp
-      )
-  '''
+    """rnn = LSTM(name='rnn',
+             parent=['x_1', 'z_1','y_1'],
+             parent_dim=[x2s_dim, z2s_dim, y_dim],
+             nout=rnn_dim,
+             unit='tanh',
+             init_W=mainloop.model.nodes[0].init_W,
+             init_U=mainloop.model.nodes[0].init_U,
+             init_b=mainloop.model.nodes[0].init_b)
 
     x_1 = FullyConnectedLayer(name='x_1',
                               parent=['x_t'],
@@ -188,41 +178,32 @@ def main(args):
                               parent_dim=[y_dim],
                               nout=y2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
+                              init_W=mainloop.model.nodes[2].init_W,
+                              init_b=mainloop.model.nodes[2].init_b)
 
     z_1 = FullyConnectedLayer(name='z_1',
                               parent=['z_t'],
                               parent_dim=[z_dim],
                               nout=z2s_dim,
                               unit='relu',
-                              init_W=init_W,
-                              init_b=init_b)
-
-    rnn = LSTM(name='rnn',
-               parent=['x_1', 'z_1','y_1'],
-               parent_dim=[x2s_dim, z2s_dim, y_dim],
-               nout=rnn_dim,
-               unit='tanh',
-               init_W=init_W,
-               init_U=init_U,
-               init_b=init_b)
+                              init_W=mainloop.model.nodes[3].init_W,
+                              init_b=mainloop.model.nodes[3].init_b)
 
     phi_1 = FullyConnectedLayer(name='phi_1',
                                 parent=['x_1', 's_tm1','y_1'],
                                 parent_dim=[x2s_dim, rnn_dim,y2s_dim],
                                 nout=q_z_dim,
                                 unit='relu',
-                                init_W=init_W,
-                                init_b=init_b)
+                                init_W=mainloop.model.nodes[4].init_W,
+                                init_b=mainloop.model.nodes[4].init_b)
 
     phi_mu = FullyConnectedLayer(name='phi_mu',
                                  parent=['phi_1'],
                                  parent_dim=[q_z_dim],
                                  nout=z_dim,
                                  unit='linear',
-                                 init_W=init_W,
-                                 init_b=init_b)
+                                 init_W=mainloop.model.nodes[5].init_W,
+                                 init_b=mainloop.model.nodes[5].init_b)
 
     phi_sig = FullyConnectedLayer(name='phi_sig',
                                   parent=['phi_1'],
@@ -230,24 +211,24 @@ def main(args):
                                   nout=z_dim,
                                   unit='softplus',
                                   cons=1e-4,
-                                  init_W=init_W,
-                                  init_b=init_b_sig)
+                                  init_W=mainloop.model.nodes[6].init_W,
+                                  init_b=mainloop.model.nodes[6].init_b)
 
     prior_1 = FullyConnectedLayer(name='prior_1',
                                   parent=['x_1','s_tm1'],
                                   parent_dim=[x2s_dim,rnn_dim],
                                   nout=p_z_dim,
                                   unit='relu',
-                                  init_W=init_W,
-                                  init_b=init_b)
+                                  init_W=mainloop.model.nodes[7].init_W,
+                                  init_b=mainloop.model.nodes[7].init_b)
 
     prior_mu = FullyConnectedLayer(name='prior_mu',
                                    parent=['prior_1'],
                                    parent_dim=[p_z_dim],
                                    nout=z_dim,
                                    unit='linear',
-                                   init_W=init_W,
-                                   init_b=init_b)
+                                   init_W=mainloop.model.nodes[8].init_W,
+                                   init_b=mainloop.model.nodes[8].init_b)
 
     prior_sig = FullyConnectedLayer(name='prior_sig',
                                     parent=['prior_1'],
@@ -255,24 +236,24 @@ def main(args):
                                     nout=z_dim,
                                     unit='softplus',
                                     cons=1e-4,
-                                    init_W=init_W,
-                                    init_b=init_b_sig)
+                                    init_W=mainloop.model.nodes[9].init_W,
+                                    init_b=mainloop.model.nodes[9].init_b)
 
     theta_1 = FullyConnectedLayer(name='theta_1',
                                   parent=['z_1', 's_tm1'],
                                   parent_dim=[z2s_dim, rnn_dim],
                                   nout=p_x_dim,
                                   unit='relu',
-                                  init_W=init_W,
-                                  init_b=init_b)
+                                  init_W=mainloop.model.nodes[10].init_W,
+                                  init_b=mainloop.model.nodes[10].init_b)
 
     theta_mu = FullyConnectedLayer(name='theta_mu',
                                    parent=['theta_1'],
                                    parent_dim=[p_x_dim],
                                    nout=target_dim,
                                    unit='linear',
-                                   init_W=init_W,
-                                   init_b=init_b)
+                                   init_W=mainloop.model.nodes[11].init_W,
+                                   init_b=mainloop.model.nodes[11].init_b)
 
     theta_sig = FullyConnectedLayer(name='theta_sig',
                                     parent=['theta_1'],
@@ -280,47 +261,44 @@ def main(args):
                                     nout=target_dim,
                                     unit='softplus',
                                     cons=1e-4,
-                                    init_W=init_W,
-                                    init_b=init_b_sig)
+                                    init_W=mainloop.model.nodes[12].init_W,
+                                    init_b=mainloop.model.nodes[12].init_b)
 
     coeff = FullyConnectedLayer(name='coeff',
                                 parent=['theta_1'],
                                 parent_dim=[p_x_dim],
                                 nout=k,
                                 unit='softmax',
-                                init_W=init_W,
-                                init_b=init_b)
+                                init_W=mainloop.model.nodes[13].init_W,
+                                init_b=mainloop.model.nodes[13].init_b)"""
 
-    corr = FullyConnectedLayer(name='corr',
-                               parent=['theta_1'],
-                               parent_dim=[p_x_dim],
-                               nout=k,
-                               unit='tanh',
-                               init_W=init_W,
-                               init_b=init_b)
+    #pickle is from experiment gmmAE/18-05-30_16-07_app3
+    fmodel = open('dp_dis1-sch_1.pkl', 'rb')
+    mainloop = cPickle.load(fmodel)
+    fmodel.close()
 
-    binary = FullyConnectedLayer(name='binary',
-                                 parent=['theta_1'],
-                                 parent_dim=[p_x_dim],
-                                 nout=1,
-                                 unit='sigmoid',
-                                 init_W=init_W,
-                                 init_b=init_b)
+    rnn = mainloop.model.nodes[0]
+    x_1 = mainloop.model.nodes[1]
+    y_1 = mainloop.model.nodes[2]
+    z_1 = mainloop.model.nodes[3]
+    phi_1 = mainloop.model.nodes[4]
+    phi_mu = mainloop.model.nodes[5]
+    phi_sig = mainloop.model.nodes[6]
+    prior_1 = mainloop.model.nodes[7]
+    prior_mu = mainloop.model.nodes[8]
+    prior_sig = mainloop.model.nodes[9]
+    theta_1 = mainloop.model.nodes[10]
+    theta_mu = mainloop.model.nodes[11]
+    theta_sig = mainloop.model.nodes[12]
+    coeff = mainloop.model.nodes[13]
 
     nodes = [rnn,
-             x_1, y_1, z_1, #dissag_pred,
-             phi_1, phi_mu, phi_sig,
-             prior_1, prior_mu, prior_sig,
-             theta_1, theta_mu, theta_sig, coeff]#, corr, binary
+         x_1, y_1, z_1, #dissag_pred,
+         phi_1, phi_mu, phi_sig,
+         prior_1, prior_mu, prior_sig,
+         theta_1, theta_mu, theta_sig, coeff]#, corr, binary
 
     params = mainloop.model.params
-
-    
-    for node in nodes:
-        if node.initialize() is not None: #gives the W that was feed in the class - retrieved ones
-            params.update(node.initialize())
-    
-    params = init_tparams(params)
 
     s_0 = rnn.get_init_state(batch_size)
 
@@ -509,12 +487,25 @@ def main(args):
         k_speedOfconvergence=kSchedSamp
     )"""
 
-    mainloop.restore(
+    """mainloop.restore(
         data=Iterator(train_data, batch_size),
         cost=nll_upper_bound,
         model=model,
         optimizer=mainloop.optimizer
-      )
+      )"""
+
+    mainloop.restore(
+      name=pkl_name,
+      data=Iterator(train_data, batch_size),
+      model=model,
+      optimizer=optimizer,
+      cost=nll_upper_bound,
+      outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
+      n_steps = n_steps,
+      extension=extension,
+      lr_iterations=lr_iterations,
+      k_speedOfconvergence=kSchedSamp
+    )
 
 
     mainloop.run()
