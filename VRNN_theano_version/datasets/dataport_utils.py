@@ -79,7 +79,7 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
                         flgScaling=0, trainPer=trainPer, valPer=valPer, testPer=testPer)
 
     if (numApps==-1):
-        truFileName='all_'+str(n_steps)+'_tr'+str(trainPer)+'_te'+str(testPer)+'_te'+str(valPer)+'_b'+str(len(windows))+'_'+str(windows[0][0])+'_'+str(windows[0][1])
+        truFileName='all_'+str(n_steps)+'_tr'+str(trainPer)+'_te'+str(testPer)+'_te'+str(valPer)+'_b'+str(windows.keys())
     else:
         truFileName=appliances[numApps]+'_'+str(n_steps)+'_tr'+str(trainPer)+'_te'+str(testPer)+'_te'+str(valPer)+'_b'+str(len(windows))#+'_'+str(windows[0][0])+'_'+str(windows[0][1])
     try:
@@ -89,7 +89,7 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
         XdataSet, YdataSet = reader.load_csvdata(data_path, numApps,typeLoad)
     #shape before: batch, apps, steps
         x_train, x_test, x_val, y_train, y_test, y_val = XdataSet['train'],XdataSet['test'],XdataSet['val'], YdataSet['train'],YdataSet['test'],YdataSet['val']
-        x_train, x_test, x_val =  np.expand_dims(x_train,axis=2),  np.expand_dims(x_val,axis=2), np.expand_dims(x_test,axis=2)
+        x_train, x_test, x_val =  np.expand_dims(x_train,axis=2),  np.expand_dims(x_test,axis=2), np.expand_dims(x_val,axis=2)
         with open(data_path+"/pickles/"+truFileName+".pickle",'wb') as splitWrite:
             pickle.dump({'X_train':x_train,'Y_train':y_train,'X_val':x_val,'Y_val':y_val,'X_test':x_test,'Y_test':y_test},splitWrite)
 
