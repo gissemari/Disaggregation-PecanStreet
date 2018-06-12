@@ -455,7 +455,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr, 75:(lr/10), 150:(lr/100)}
+    lr_iterations = {0:lr}
 
     mainloop = Training(
         name=pkl_name,

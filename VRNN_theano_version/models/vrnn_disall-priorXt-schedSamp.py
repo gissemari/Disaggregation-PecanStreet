@@ -35,7 +35,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = [ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {6990:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {3413:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -1351,6 +1351,7 @@ def main(args):
                               )
     testOutput = []
     testMetrics2 = []
+    perEnergyAssig = []
     numBatchTest = 0
     for batch in data:
       outputGeneration = test_fn(batch[0], batch[2])
@@ -1374,6 +1375,11 @@ def main(args):
       plt.savefig(save_path+"/vrnn_dis_generated{}_Realagg_0-4".format(numBatchTest))
       plt.clf()
       numBatchTest+=1
+
+      sumNumPred = np.sum(outputGeneration[0], axis=(0,1))
+      sumNumReal = np.sum(batch[2], axis=(0,1))
+      perEnergy  = np.sum(batch[0], axis=(0,1))
+      perEnergyAssig.append((sumNumReal/perEnergy,sumNumPred/perEnergy))
 
     testOutput = np.asarray(testOutput)
     testMetrics2 = np.asarray(testMetrics2)
@@ -1490,6 +1496,11 @@ def main(args):
         u = mainloop.trainlog.monitor['mae8'][i]
       fLog.write("{:d},{:.2f},{:.2f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n".format(
                   ep,a,b,d,e,f,g,h,j,k,l,m,n,p,q,r,s,t,u))
+    
+    fLog.write("\nbatch,perReal1,perReal2,perReal3,perReal4,perReal5,perReal6,perReal7,perReal8,perPredict1,perPredict2,perPredict3,perPredict4,perPredict5,perPredict6,perPredict7,perPredict8\n")
+    for batch, item in enumerate(perEnergyAssig):
+      fLog.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(batch,item[0][0],item[0][1],item[0][2],item[0][3],item[0][4],item[0][5],item[0][6],item[0][7],item[1][0],item[1][1],item[1][2],item[1][3],item[1][4],item[1][5],item[1][6],item[1][7]))
+
     f = open(save_path+'/outputRealGeneration.pkl', 'wb')
     pickle.dump(outputGeneration, f, -1)
     f.close()
