@@ -35,7 +35,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = [ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {3413:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {8292:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -1318,7 +1318,7 @@ def main(args):
         WeightNorm()
     ]
 
-    lr_iterations = {0:lr}
+    lr_iterations = {0:lr, 100:(lr/10)}
 
     mainloop = Training(
         name=pkl_name,

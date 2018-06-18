@@ -1,5 +1,6 @@
 #import ipdb
 import numpy as np
+import scipy.io
 import theano
 import theano.typed_list as TL
 import theano.tensor as T
@@ -37,7 +38,7 @@ from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
 appliances = [ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {6990:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {7951:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
 #windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
@@ -56,7 +57,7 @@ def main(args):
     n_steps = int(args['n_steps'])
     stride_train = int(args['stride_train'])
     stride_test = int(args['stride_test'])
-    loadType = int(args['typeLoad'])
+    loadType = int(args['loadType'])
 
     flgMSE = int(args['flgMSE'])
     monitoring_freq = int(args['monitoring_freq'])
@@ -142,7 +143,7 @@ def main(args):
         mask.tag.test_value = temp
 
     #from experiment 18-05-31_18-48
-    pickelModel = '/home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output/allAtOnce/18-06-11_19-48/dp_disall-sch_1_best.pkl'
+    pickelModel = '/home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output/allAtOnce/18-06-14_21-41_7951/dp_disall-sch_1_best.pkl'
     fmodel = open(pickelModel, 'rb')
     mainloop = cPickle.load(fmodel)
     fmodel.close()
@@ -691,31 +692,50 @@ def main(args):
     testOutput = []
     testMetrics2 = []
     perEnergyAssig = []
+
+    bestInstsancesPred = []
+    bestInstsancesDisa = []
+    bestInstsancesAggr = []
+
     numBatchTest = 0
 
     for batch in data:
       outputGeneration = test_fn(batch[0], batch[2])
       testOutput.append(outputGeneration[1:20]) #before 36 including unnormalized metrics
       testMetrics2.append(outputGeneration[20:])
-      #{0:[4,20], 2:[5,10]} 
-      #if (numBatchTest==0):
 
-      plt.figure(1)
-      plt.plot(np.transpose(outputGeneration[0],[1,0,2])[4])
-      plt.legend(appliances)
-      plt.show()
-      plt.savefig(save_path+"/vrnn_dis_generated{}_Pred_0-4".format(numBatchTest))
-      plt.clf()
+      ########## best mae
+      predTest = np.transpose(outputGeneration[0],[1,0,2]).clip(min=0)
+      realTest = np.transpose(batch[2],[1,0,2])
 
-      plt.figure(2)
-      plt.plot(np.transpose(batch[2],[1,0,2])[4])
-      plt.savefig(save_path+"/vrnn_dis_generated{}_RealDisag_0-4".format(numBatchTest))
-      plt.clf()
+      batchMSE = np.mean(np.absolute(predTest-realTest),axis=(1,2))
+      idxMin = np.argmin(batchMSE)
 
-      plt.figure(3)
-      plt.plot(np.transpose(batch[0],[1,0,2])[4])
-      plt.savefig(save_path+"/vrnn_dis_generated{}_Realagg_0-4".format(numBatchTest))
-      plt.clf()
+      print(np.asarray(idxMin).reshape(1,-1)[0,:])
+      print(batchMSE[idxMin])
+      for idx in np.asarray(idxMin).reshape(1,-1)[0,:]:
+
+        plt.figure(1)
+        plt.plot(predTest[idx])
+        plt.legend(appliances)
+        plt.savefig(save_path+"/vrnn_disall_test-b{}_Pred_0-{}".format(numBatchTest,idx),format='eps')
+        plt.clf()
+
+        plt.figure(2)
+        plt.plot(realTest[idx])
+        plt.legend(appliances)
+        plt.savefig(save_path+"/vrnn_disall_test-b{}_RealDisag_0-{}".format(numBatchTest,idx),format='eps')
+        plt.clf()
+
+        plt.figure(3)
+        plt.plot(np.transpose(batch[0],[1,0,2])[idx])
+        plt.savefig(save_path+"/vrnn_disall_test-b{}_Realagg_0-{}".format(numBatchTest,idx),format='eps')
+        plt.clf()
+
+        bestInstsancesPred.append(predTest[idx])
+        bestInstsancesDisa.append(realTest[idx])
+        bestInstsancesAggr.append(np.transpose(batch[0],[1,0,2])[idx])
+
       numBatchTest+=1
 
       sumNumPred = np.sum(outputGeneration[0], axis=(0,1))
@@ -723,6 +743,7 @@ def main(args):
       perEnergy  = np.sum(batch[0], axis=(0,1))
       perEnergyAssig.append((sumNumReal/perEnergy,sumNumPred/perEnergy))
 
+    scipy.io.savemat(save_path+'/testInstances.mat', mdict={'pred': bestInstsancesPred, 'disag':bestInstsancesDisa, 'agg':bestInstsancesAggr})
 
     testOutput = np.asarray(testOutput)
     testMetrics2 = np.asarray(testMetrics2)
@@ -780,40 +801,6 @@ def main(args):
     fLog.write("relErr1,relErr2,relErr3,relErr4,relErr5,relErr6,relErr7,relErr8,propAssigned1,propAssigned2,propAssigned3,propAssigned4,propAssigned5\n")
     fLog.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(relErr1_test,relErr2_test,relErr3_test,relErr4_test, relErr5_test,relErr6_test,relErr7_test,relErr8_test,propAssigned1_test,propAssigned2_test,propAssigned3_test, propAssigned4_test,propAssigned5_test,propAssigned6_test,propAssigned7_test,propAssigned8_test))
 
-    fLog.write("q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim\n")
-    fLog.write("{},{},{},{},{},{}\n".format(q_z_dim,p_z_dim,p_x_dim,x2s_dim,y2s_dim,z2s_dim))
-    fLog.write("epoch,log,kl,mse1,mse2,mse3,mse4,mse5,mse6,mse7,mse8,mae1,mae2,mae3,mae4,mae5,mae6,mae7,mae8\n")
-    for i , item in enumerate(mainloop.trainlog.monitor['nll_upper_bound']):
-      e,f,g,h,j,k,l,n,p,q,r,s,t,u =  0,0,0,0,0,0,0,0,0,0,0,0,0,0
-      ep = mainloop.trainlog.monitor['epoch'][i]
-      a = mainloop.trainlog.monitor['recon_term'][i]
-      b = mainloop.trainlog.monitor['kl_term'][i]
-      d = mainloop.trainlog.monitor['mse1'][i]
-      m = mainloop.trainlog.monitor['mae1'][i]
-      
-      if (y_dim>1):
-        e = mainloop.trainlog.monitor['mse2'][i]
-        n = mainloop.trainlog.monitor['mae2'][i]
-      if (y_dim>2):
-        f = mainloop.trainlog.monitor['mse3'][i]
-        p = mainloop.trainlog.monitor['mae3'][i]
-      if (y_dim>3):
-        g = mainloop.trainlog.monitor['mse4'][i]
-        q = mainloop.trainlog.monitor['mae4'][i]
-      if (y_dim>4):
-        h = mainloop.trainlog.monitor['mse5'][i]
-        r = mainloop.trainlog.monitor['mae5'][i]
-      if (y_dim>5):
-        j = mainloop.trainlog.monitor['mse6'][i]
-        s = mainloop.trainlog.monitor['mae6'][i]
-      if (y_dim>6):
-        k = mainloop.trainlog.monitor['mse7'][i]
-        t = mainloop.trainlog.monitor['mae7'][i]
-      if (y_dim>7):
-        l = mainloop.trainlog.monitor['mse8'][i]
-        u = mainloop.trainlog.monitor['mae8'][i]
-      fLog.write("{:d},{:.2f},{:.2f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n".format(
-                  ep,a,b,d,e,f,g,h,j,k,l,m,n,p,q,r,s,t,u))
     fLog.write("batch,perReal1,perReal2,perReal3,perReal4,perReal5,perReal6,perReal7,perReal8,perPredict1,perPredict2,perPredict3,perPredict4,perPredict5,perPredict6,perPredict7,perPredict8\n")
     for batch, item in enumerate(perEnergyAssig):
       fLog.write("{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n".format(batch,item[0][0],item[0][1],item[0][2],item[0][3],item[0][4],item[0][5],item[0][6],item[0][7],item[1][0],item[1][1],item[1][2],item[1][3],item[1][4],item[1][5],item[1][6],item[1][7]))
