@@ -333,6 +333,7 @@ def main(args):
     theta_sig1_temp_val.name = 'theta_sig1_val'
     coeff1_temp_val.name = 'coeff1_val'
     y_pred1_temp_val.name = 'disaggregation1_val'
+    y_pred1_temp_val = T.clip(y_pred1_temp_val,0.0,np.inf)
     prediction_val = y_pred1_temp_val
 
     #[:,:,flgAgg].reshape((y.shape[0],y.shape[1],1)
@@ -400,6 +401,8 @@ def main(args):
       theta_sig2_temp_val.name = 'theta_sig2_val'
       coeff2_temp_val.name = 'coeff2_val'
       y_pred2_temp_val.name = 'disaggregation2_val'
+      y_pred2_temp_val = T.clip(y_pred2_temp_val,0.0,np.inf)
+
       prediction_val = T.concatenate([prediction_val, y_pred2_temp_val], axis=2) #before it gets unnormalized
 
       mse2_val = T.mean((y_pred2_temp_val - y[:,:,1].reshape((y.shape[0],y.shape[1],1)))**2)
@@ -435,6 +438,8 @@ def main(args):
       theta_sig3_temp_val.name = 'theta_sig3_val'
       coeff3_temp_val.name = 'coeff3_val'
       y_pred3_temp_val.name = 'disaggregation3_val'
+      y_pred3_temp_val = T.clip(y_pred3_temp_val,0.0,np.inf)
+
       prediction_val = T.concatenate([prediction_val, y_pred3_temp_val], axis=2) #before it gets unnormalized
 
       mse3_val = T.mean((y_pred3_temp_val - y[:,:,2].reshape((y.shape[0],y.shape[1],1)))**2)
@@ -471,6 +476,8 @@ def main(args):
       theta_sig4_temp_val.name = 'theta_sig4_val'
       coeff4_temp_val.name = 'coeff4_val'
       y_pred4_temp_val.name = 'disaggregation4_val'
+      y_pred4_temp_val = T.clip(y_pred4_temp_val,0.0,np.inf)
+
       prediction_val = T.concatenate([prediction_val, y_pred4_temp_val], axis=2) #before it gets unnormalized
 
       mse4_val = T.mean((y_pred4_temp_val - y[:,:,3].reshape((y.shape[0],y.shape[1],1)))**2)
@@ -505,6 +512,8 @@ def main(args):
       theta_sig5_temp_val.name = 'theta_sig5_val'
       coeff5_temp_val.name = 'coeff5_val'
       y_pred5_temp_val.name = 'disaggregation5_val'
+      y_pred5_temp_val = T.clip(y_pred5_temp_val,0.0,np.inf)
+
       prediction_val = T.concatenate([prediction_val, y_pred5_temp_val], axis=2) # before it gets unnormalized
 
       mse5_val = T.mean((y_pred5_temp_val - y[:,:,4].reshape((y.shape[0],y.shape[1],1)))**2)
@@ -540,6 +549,7 @@ def main(args):
       theta_sig6_temp_val.name = 'theta_sig6_val'
       coeff6_temp_val.name = 'coeff6_val'
       y_pred6_temp_val.name = 'disaggregation6_val'
+      y_pred6_temp_val = T.clip(y_pred6_temp_val,0.0,np.inf)
 
       prediction_val = T.concatenate([prediction_val, y_pred6_temp_val], axis=2) #before it gets unnormalized
 
@@ -575,6 +585,8 @@ def main(args):
       theta_sig7_temp_val.name = 'theta_sig7_val'
       coeff7_temp_val.name = 'coeff7_val'
       y_pred7_temp_val.name = 'disaggregation7_val'
+      y_pred7_temp_val = T.clip(y_pred7_temp_val,0.0,np.inf)
+
       prediction_val = T.concatenate([prediction_val, y_pred7_temp_val], axis=2) # before it gets unnormalized
 
       mse7_val = T.mean((y_pred7_temp_val - y[:,:,6].reshape((y.shape[0],y.shape[1],1)))**2)
@@ -610,6 +622,7 @@ def main(args):
       theta_sig8_temp_val.name = 'theta_sig8_val'
       coeff8_temp_val.name = 'coeff8_val'
       y_pred8_temp_val.name = 'disaggregation8_val'
+      y_pred8_temp_val = T.clip(y_pred8_temp_val,0.0,np.inf)
 
       prediction_val = T.concatenate([prediction_val, y_pred8_temp_val], axis=2) # before it gets unnormalized
 
