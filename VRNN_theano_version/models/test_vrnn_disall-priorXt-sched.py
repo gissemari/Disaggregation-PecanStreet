@@ -738,7 +738,7 @@ def main(args):
 
       numBatchTest+=1
 
-      sumNumPred = np.sum(outputGeneration[0], axis=(0,1))
+      sumNumPred = np.sum(predTest, axis=(0,1))
       sumNumReal = np.sum(batch[2], axis=(0,1))
       perEnergy  = np.sum(batch[0], axis=(0,1))
       perEnergyAssig.append((sumNumReal/perEnergy,sumNumPred/perEnergy))
