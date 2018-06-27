@@ -310,7 +310,7 @@ def main(args):
     #mseUnNorm_test =  testOutput[:, 3].mean()
     #maeUnNorm_test =  testOutput[:, 4].mean()
 
-    fLog = open(save_path+'/output.csv', 'w')
+    fLog = open(save_path+'/output_test.csv', 'w')
     fLog.write(str(windows)+"\n")
     fLog.write("logTestOutside,logTestInside,mseTest,maeTest, mseTestUnNorm, maeTestUnNorm\n")
     fLog.write("{},{},{},{}\n".format(recon_testOutside, recon_testInside,mse_test,mae_test))
