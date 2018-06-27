@@ -32,7 +32,6 @@ from cle.cle.utils.gpu_op import concatenate
 from VRNN_theano_version.datasets.dataport import Dataport
 from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
 
-building = 2859
 appliances = ['air1', 'furnace1', 'refrigerator1',  'clotheswasher1','drye1','dishwasher1', 'kitchenapp1', 'microwave1']
 #windows = {building:("2015-01-01", "2015-01-01")}#, 2859:("2015-01-01", "2016-01-01"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-01",  "2016-01-01"),3413:("2015-01-01", "2016-01-01")}#3413:("2015-01-01", "2015-12-31")
 # dishwasher: windows = {6990:("2015-02-12", "2016-01-01"), 2859:("2015-02-01", "2015-12-15"), 7951:("2015-01-01", "2016-01-01"),8292:("2015-01-04",  "2016-01-01"),3413:("2015-01-01", "2015-12-25")}#3413:("2015-01-01", "2015-12-31")

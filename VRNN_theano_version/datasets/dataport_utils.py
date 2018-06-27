@@ -84,6 +84,7 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
         truFileName=appliances[numApps]+'_'+str(n_steps)+'_tr'+str(trainPer)+'_te'+str(testPer)+'_te'+str(valPer)+'_b'+str(len(windows))#+'_'+str(windows[0][0])+'_'+str(windows[0][1])
     try:
         split = pickle.load( open(data_path+"/pickles/"+truFileName+".pickle","rb"))
+        print(split['X_train'].shape,  split['Y_train'].shape, split['X_val'].shape, split['Y_val'].shape, split['X_test'].shape, split['Y_test'].shape)
         return split['X_train'], split['Y_train'], split['X_val'], split['Y_val'], split['X_test'], split['Y_test'], reader
     except (OSError, IOError) as e:
         XdataSet, YdataSet = reader.load_csvdata(data_path, numApps,typeLoad)
@@ -93,4 +94,5 @@ def fetch_dataport(data_path, windows, appliances, numApps, period, n_steps, str
         with open(data_path+"/pickles/"+truFileName+".pickle",'wb') as splitWrite:
             pickle.dump({'X_train':x_train,'Y_train':y_train,'X_val':x_val,'Y_val':y_val,'X_test':x_test,'Y_test':y_test},splitWrite)
 
+    print(x_train.shape, y_train.shape, x_val.shape, y_val.shape, x_test.shape, y_test.shape)
     return  x_train, y_train, x_val, y_val, x_test, y_test, reader
