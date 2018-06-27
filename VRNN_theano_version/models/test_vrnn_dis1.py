@@ -338,7 +338,7 @@ if __name__ == "__main__":
         params[param_name] = param_value
 
     params['testRef_file'] = params['save_path']+'/gmmAE/'+params['testRef_file']
-    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']
+    params['save_path'] = params['save_path']+'/gmmAE/'+datetime.datetime.now().strftime("%y-%m-%d_%H-%M")+'_app'+params['flgAgg']+'_test'
     os.makedirs(params['save_path'])
     shutil.copy('config_AE.txt', params['save_path']+'/config_AE.txt')
 
