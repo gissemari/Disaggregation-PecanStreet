@@ -21,4 +21,5 @@ n_steps 60
 stride_train 60
 typeLoad 2
 kSchedSamp 30
+typeActivFunc relu
 clipped 1

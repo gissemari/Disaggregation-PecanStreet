@@ -70,6 +70,7 @@ def main(args):
     typeLoad = int(args['typeLoad'])
     debug = int(args['debug'])
     kSchedSamp = int(args['kSchedSamp'])
+    typeActivFunc = args['typeActivFunc']
 
     print "trial no. %d" % trial
     print "batch size %d" % batch_size
@@ -231,7 +232,7 @@ def main(args):
                                    parent=['theta_1'],
                                    parent_dim=[p_x_dim],
                                    nout=target_dim,
-                                   unit='linear',
+                                   unit=typeActivFunc,
                                    init_W=init_W,
                                    init_b=init_b)
 

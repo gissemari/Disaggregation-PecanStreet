@@ -139,15 +139,10 @@ def main(args):
         temp[:, -2:] = 0.
         mask.tag.test_value = temp
 
-    fmodel = open('dp_dis1-sch_1_best.pkl', 'rb')
+    pickelModel = '/home/gissella/Documents/Research/Disaggregation/PecanStreet-dataport/VRNN_theano_version/output/gmmAE/18-05-30_16-27_app6/dp_dis1-sch_1_best.pkl'
+    fmodel = open(pickelModel, 'rb')
     mainloop = cPickle.load(fmodel)
     fmodel.close()
-
-    #attrs = vars(mainloop)
-    #print ', '.join("%s: %s" % item for item in attrs.items())
-    names = [x.name for x in mainloop.model.nodes]
-    print(names)
-    #print(mainloop.model.nodes)
 
     #define layers
     rnn = mainloop.model.nodes[0]
@@ -219,96 +214,13 @@ def main(args):
 
     s_temp_val = concatenate([s_0[None, :, :], s_temp_val[:-1]], axis=0)
 
-    """def inner_fn_train(x_t, y_t, s_tm1):
-
-        phi_1_t = phi_1.fprop([x_t, s_tm1,y_t], params)
-        phi_mu_t = phi_mu.fprop([phi_1_t], params)
-        phi_sig_t = phi_sig.fprop([phi_1_t], params)
-
-        prior_1_t = prior_1.fprop([x_t,s_tm1], params)
-        prior_mu_t = prior_mu.fprop([prior_1_t], params)
-        prior_sig_t = prior_sig.fprop([prior_1_t], params)
-
-        z_t = Gaussian_sample(phi_mu_t, phi_sig_t)
-        z_1_t = z_1.fprop([z_t], params)
-
-        theta_1_t = theta_1.fprop([z_1_t, s_tm1], params)
-        theta_mu_t = theta_mu.fprop([theta_1_t], params)
-        theta_sig_t = theta_sig.fprop([theta_1_t], params)
-
-        coeff_t = coeff.fprop([theta_1_t], params)
-        #corr_t = corr.fprop([theta_1_t], params)
-        #binary_t = binary.fprop([theta_1_t], params)
-
-        pred = GMM_sample(theta_mu_t, theta_sig_t, coeff_t) #Gaussian_sample(theta_mu_t, theta_sig_t)
-        s_t = rnn.fprop([[x_t, z_1_t, y_t], [s_tm1]], params)
-        #y_pred = dissag_pred.fprop([s_t], params)
-
-        return s_t, phi_mu_t, phi_sig_t, prior_mu_t, prior_sig_t,  theta_mu_t, theta_sig_t, coeff_t, pred#, y_pred
-        #corr_temp, binary_temp
-    ((s_temp, phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp, theta_mu_temp, theta_sig_temp, coeff_temp, prediction), updates) =\
-        theano.scan(fn=inner_fn_train,
-                    sequences=[x_1_temp, y_1_temp],
-                    outputs_info=[s_0, None, None, None, None, None, None, None, None])
-
-    
-    for k, v in updates.iteritems():
-        k.default_update = v"""
-    
-    #s_temp = concatenate([s_0[None, :, :], s_temp[:-1]], axis=0)# seems like this is for creating an additional dimension to s_0
-
-    """theta_mu_temp.name = 'theta_mu_temp'
-    theta_sig_temp.name = 'theta_sig_temp'
-    coeff_temp.name = 'coeff'
-
-    if (flgAgg == -1 ):
-      prediction.name = 'x_reconstructed'
-      mse = T.mean((prediction - x)**2) # CHECK RESHAPE with an assertion
-      mae = T.mean( T.abs(prediction - x) )
-      mse.name = 'mse'
-      pred_in = x.reshape((x_shape[0]*x_shape[1], -1))
-    else:
-      prediction.name = 'pred_'+str(flgAgg)
-      mse = T.mean((prediction - y)**2) # As axis = None is calculated for all
-      mae = T.mean( T.abs_(prediction - y) )
-      mse.name = 'mse'
-      mae.name = 'mae'
-      pred_in = y.reshape((y.shape[0]*y.shape[1],-1))
-
-    kl_temp = KLGaussianGaussian(phi_mu_temp, phi_sig_temp, prior_mu_temp, prior_sig_temp)"""
 
     x_shape = x.shape
-    
-    """theta_mu_in = theta_mu_temp.reshape((x_shape[0]*x_shape[1], -1))
-    theta_sig_in = theta_sig_temp.reshape((x_shape[0]*x_shape[1], -1))
-    coeff_in = coeff_temp.reshape((x_shape[0]*x_shape[1], -1))
-    #corr_in = corr_temp.reshape((x_shape[0]*x_shape[1], -1))
-    #binary_in = binary_temp.reshape((x_shape[0]*x_shape[1], -1))
-
-    recon = GMM(pred_in, theta_mu_in, theta_sig_in, coeff_in)# BiGMM(x_in, theta_mu_in, theta_sig_in, coeff_in, corr_in, binary_in)
-    recon = recon.reshape((x_shape[0], x_shape[1]))
-    recon.name = 'gmm_out'
-
-    recon_term = recon.sum(axis=0).mean()
-    recon_term.name = 'recon_term'
-    
-    kl_term = kl_temp.sum(axis=0).mean()
-    kl_term.name = 'kl_term'
-
-    nll_upper_bound = recon_term + kl_term #+ mse
-    if (flgMSE):
-      nll_upper_bound = nll_upper_bound + mse
-    nll_upper_bound.name = 'nll_upper_bound'"""
 
     ######################## TEST (GENERATION) TIME
     prediction_val.name = 'generated__'+str(flgAgg)
     mse_val = T.mean((prediction_val - y)**2) # As axis = None is calculated for all
     mae_val = T.mean( T.abs_(prediction_val - y) )
-
-    #y_unNormalize = (y * reader.stdTrain) + reader.meanTrain # accessing to just an scalar when loading y_dim=1
-    #prediction_valAux = (prediction_val * reader.stdTrain) + reader.meanTrain
-    #mse_valUnNorm = T.mean((prediction_valAux - y_unNormalize)**2) # As axis = None is calculated for all
-    #mae_valUnNorm = T.mean( T.abs_(prediction_valAux - y_unNormalize) )
 
     mse_val.name = 'mse_val'
     mae_val.name = 'mae_val'
@@ -329,48 +241,10 @@ def main(args):
     model.params = params
     model.nodes = nodes
 
-    optimizer = Adam(
-        lr=lr
-    )
-
-    header = "epoch,log,kl,nll_upper_bound,mse,mae\n"
-    extension = [
-        GradientClipping(batch_size=batch_size),
-        EpochCount(epoch, save_path, header),
-        Monitoring(freq=monitoring_freq,
-                   ddout=[nll_upper_bound, recon_term, kl_term, mse, mae,
-                          theta_mu_temp, prediction],
-                   indexSep=5,
-                   instancesPlot = instancesPlot, #{0:[4,20],2:[5,10]},#, 80,150
-                   data=[Iterator(valid_data, batch_size)],
-                   savedFolder = save_path),
-        Picklize(freq=monitoring_freq, path=save_path),
-        EarlyStopping(freq=monitoring_freq, path=save_path, channel=channel_name),
-        WeightNorm()
-    ]
-
-    """lr_iterations = {0:lr, 75:(lr/10), 150:(lr/100)}
-
-    mainloop = Training(
-        name=pkl_name,
-        data=Iterator(train_data, batch_size),
-        model=model,
-        optimizer=optimizer,
-        cost=nll_upper_bound,
-        outputs=[recon_term, kl_term, nll_upper_bound, mse, mae],
-        n_steps = n_steps,
-        extension=extension,
-        lr_iterations=lr_iterations,
-        k_speedOfconvergence = kSchedSamp
-    )
-    mainloop.run()"""
 
     data=Iterator(test_data, batch_size)
 
     test_fn = theano.function(inputs=[x, y],#[x, y],
-                              #givens={x:Xtest},
-                              #on_unused_input='ignore',
-                              #z=( ,200,1)
                               allow_input_downcast=True,
                               outputs=[prediction_val, recon_term_val, mse_val, mae_val]#prediction_val, mse_val, mae_val
                               ,updates=updates_val#, allow_input_downcast=True, on_unused_input='ignore'
