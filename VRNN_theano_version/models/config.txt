@@ -5,7 +5,7 @@ sample_path /home/gissella/Documents/Research/Disaggregation/PecanStreet-datapor
 flgMSE 0
 genCase 0
 monitoring_freq 340
-epoch 200
+epoch 1
 batch_size 500
 x_dim 1
 y_dim 1
@@ -19,3 +19,4 @@ period 6
 n_steps 30
 stride_train 30
 typeLoad 2
+kSchedSamp 40
