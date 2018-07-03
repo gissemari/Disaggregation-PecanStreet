@@ -1,0 +1,371 @@
+starting own vrnn
+ERROR (theano.sandbox.gpuarray): Could not initialize pygpu, support disabled
+Traceback (most recent call last):
+  File "/data/home/gbejara1/anaconda2/envs/latentVar/lib/python2.7/site-packages/theano/sandbox/gpuarray/__init__.py", line 95, in <module>
+    init_dev(config.device)
+  File "/data/home/gbejara1/anaconda2/envs/latentVar/lib/python2.7/site-packages/theano/sandbox/gpuarray/__init__.py", line 46, in init_dev
+    "Make sure Theano and libgpuarray/pygpu "
+RuntimeError: ('Wrong major API version for gpuarray:', 1, 'Make sure Theano and libgpuarray/pygpu are in sync.')
+/data/home/gbejara1/Documents/Research/Disaggregation/Dataport/VRNN_theano_version/datasets/dataport.py:3: UserWarning: 
+This call to matplotlib.use() has no effect because the backend has already
+been chosen; matplotlib.use() must be called *before* pylab, matplotlib.pyplot,
+or matplotlib.backends is imported for the first time.
+
+The backend was *originally* set to u'ps' by the following code:
+  File "vrnn_disall-priorXt-schedSamp.py", line 19, in <module>
+    from cle.cle.train.ext import (
+  File "/data/home/gbejara1/Documents/Research/Disaggregation/UK-DALE/VRNN_theano_version/models/cle/cle/train/ext.py", line 12, in <module>
+    plt.switch_backend('PS')
+  File "/data/home/gbejara1/anaconda2/envs/latentVar/lib/python2.7/site-packages/matplotlib/pyplot.py", line 230, in switch_backend
+    matplotlib.use(newbackend, warn=False, force=True)
+  File "/data/home/gbejara1/anaconda2/envs/latentVar/lib/python2.7/site-packages/matplotlib/__init__.py", line 1305, in use
+    reload(sys.modules['matplotlib.backends'])
+  File "/data/home/gbejara1/anaconda2/envs/latentVar/lib/python2.7/site-packages/matplotlib/backends/__init__.py", line 14, in <module>
+    line for line in traceback.format_stack()
+
+
+  mpl.use('Agg')
+WARNING (theano.gof.cmodule): WARNING: your Theano flags `gcc.cxxflags` specify an `-march=X` flags.
+         It is better to let Theano/g++ find it automatically, but we don't do it now
+WARNING: your Theano flags `gcc.cxxflags` specify an `-march=X` flags.
+         It is better to let Theano/g++ find it automatically, but we don't do it now
+Entering main loop
+ MONITORING STEP. Elapsed time: 0.000000 epochs 0 batches seen 0
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ initial_monitoring
+ Elapsed time for monitoring all batches: 36.690543
+ MONITORING STEP. Elapsed time: 1993.114260 epochs 18 batches seen 150
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -52.858817
+ Elapsed time for monitoring all batches: 19.550974
+ MONITORING STEP. Elapsed time: 1996.488942 epochs 37 batches seen 300
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -193.945624
+ Elapsed time for monitoring all batches: 19.530428
+ MONITORING STEP. Elapsed time: 2046.069539 epochs 56 batches seen 450
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -153.534652
+ Elapsed time for monitoring all batches: 19.285355
+trial no. 1
+batch size 200
+learning rate 0.001000
+saving pkl file 'vrnn_gmm_1'
+to the save path '/data/home/gbejara1/Documents/Research/Disaggregation/Dataport/VRNN_theano_version/output/allAtOnce/18-05-15_22-32'
+8292
+525239
+('Indexes: ', 262620, 393929, 525239)
+('Shapes before filtering ', (2626, 100), (1313, 100), (1313, 100), (2626, 100, 8), (1313, 100, 8), (1313, 100, 8))
+('cond array shape ', (8, 2626, 100))
+('len index ', 1, ' shape ', 1617)
+('cond array shape ', (8, 1313, 100))
+('len index ', 1, ' shape ', 833)
+('cond array shape ', (8, 1313, 100))
+('len index ', 1, ' shape ', 843)
+('Shapes after filtering all at once ', (1617, 100), (833, 100), (843, 100), (1617, 100, 8), (833, 100, 8), (843, 100, 8))
+('One more building ', (1617, 100), (833, 100), (843, 100), (1617, 100, 8), (833, 100, 8), (843, 100, 8))
+((1617, 100), (833, 100), (843, 100), (1617, 100, 8), (833, 100, 8), (843, 100, 8))
+[ 0.53108053  0.19674845  0.08138399  0.00495763  0.05701185  0.01968472
+  0.01195081  0.00758884]
+[ 1.05969614  0.27629691  0.06647564  0.03512723  0.4870021   0.11880165
+  0.10253485  0.08161454]
+(16, 14)
+(<type 'list'>, 5)
+Elapsed compilation time: 1056.714676
+4
+nll_upper_bound: 334.879426128 recon_term: 283.120310142 kl_term: 51.7591159861 mse1: 2.05982185002 mae1: 1.13608840035 mse2: 2.04439950563 mae2: 1.15659359793 
+Epoch: 1 - seched rate: 0.975609756098
+Epoch: 2 - seched rate: 0.975609756098
+Epoch: 3 - seched rate: 0.975609756098
+Epoch: 4 - seched rate: 0.975609756098
+Epoch: 5 - seched rate: 0.975609756098
+Epoch: 6 - seched rate: 0.975609756098
+Epoch: 7 - seched rate: 0.975609756098
+Epoch: 8 - seched rate: 0.975609756098
+Epoch: 9 - seched rate: 0.975609756098
+Epoch: 10 - seched rate: 0.975609756098
+Epoch: 11 - seched rate: 0.975609756098
+Epoch: 12 - seched rate: 0.975609756098
+Epoch: 13 - seched rate: 0.975609756098
+Epoch: 14 - seched rate: 0.975609756098
+Epoch: 15 - seched rate: 0.975609756098
+Epoch: 16 - seched rate: 0.975609756098
+Epoch: 17 - seched rate: 0.975609756098
+Epoch: 18 - seched rate: 0.975609756098
+4
+nll_upper_bound: -77.0386657734 recon_term: -80.2258139063 kl_term: 3.18714813287 mse1: 0.881439492439 mae1: 0.597476533396 mse2: 0.786621452597 mae2: 0.472231197959 
+Epoch: 19 - seched rate: 0.975609756098
+Epoch: 20 - seched rate: 0.975609756098
+Epoch: 21 - seched rate: 0.975609756098
+Epoch: 22 - seched rate: 0.975609756098
+Epoch: 23 - seched rate: 0.975609756098
+Epoch: 24 - seched rate: 0.975609756098
+Epoch: 25 - seched rate: 0.975609756098
+Epoch: 26 - seched rate: 0.975609756098
+Epoch: 27 - seched rate: 0.975609756098
+Epoch: 28 - seched rate: 0.975609756098
+Epoch: 29 - seched rate: 0.975609756098
+Epoch: 30 - seched rate: 0.975609756098
+Epoch: 31 - seched rate: 0.975609756098
+Epoch: 32 - seched rate: 0.975609756098
+Epoch: 33 - seched rate: 0.975609756098
+Epoch: 34 - seched rate: 0.975609756098
+Epoch: 35 - seched rate: 0.975609756098
+Epoch: 36 - seched rate: 0.975609756098
+Epoch: 37 - seched rate: 0.975609756098
+4
+nll_upper_bound: -231.897761362 recon_term: -236.538057539 kl_term: 4.6402961772 mse1: 0.526508927161 mae1: 0.311801747755 mse2: 0.655163803331 mae2: 0.402657740085 
+Epoch: 38 - seched rate: 0.975609756098
+Epoch: 39 - seched rate: 0.975609756098
+Epoch: 40 - seched rate: 0.936367248117
+Epoch: 41 - seched rate: 0.936367248117
+Epoch: 42 - seched rate: 0.936367248117
+Epoch: 43 - seched rate: 0.936367248117
+Epoch: 44 - seched rate: 0.936367248117
+Epoch: 45 - seched rate: 0.936367248117
+Epoch: 46 - seched rate: 0.936367248117
+Epoch: 47 - seched rate: 0.936367248117
+Epoch: 48 - seched rate: 0.936367248117
+Epoch: 49 - seched rate: 0.936367248117
+Epoch: 50 - seched rate: 0.936367248117
+Epoch: 51 - seched rate: 0.936367248117
+Epoch: 52 - seched rate: 0.936367248117
+Epoch: 53 - seched rate: 0.936367248117
+Epoch: 54 - seched rate: 0.936367248117
+Epoch: 55 - seched rate: 0.936367248117
+Epoch: 56 - seched rate: 0.936367248117
+4
+nll_upper_bound: -171.209627071 recon_term: -175.842936941 kl_term: 4.63330987019 mse1: 0.464506259368 mae1: 0.277705606944 mse2: 0.625548766677 mae2: 0.397726627907 
+Epoch: 57 - seched rate MONITORING STEP. Elapsed time: 1993.859319 epochs 75 batches seen 600
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -180.789261
+ Elapsed time for monitoring all batches: 19.180793
+ MONITORING STEP. Elapsed time: 1981.768013 epochs 93 batches seen 750
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -212.747805
+ Elapsed time for monitoring all batches: 19.184820
+ MONITORING STEP. Elapsed time: 1993.915779 epochs 112 batches seen 900
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -284.347999
+ Elapsed time for monitoring all batches: 19.130685
+ MONITORING STEP. Elapsed time: 1984.803148 epochs 131 batches seen 1050
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -393.406960
+ Elapsed time for monitoring all batches: 19.231944
+: 0.936367248117
+Epoch: 58 - seched rate: 0.936367248117
+Epoch: 59 - seched rate: 0.936367248117
+Epoch: 60 - seched rate: 0.936367248117
+Epoch: 61 - seched rate: 0.936367248117
+Epoch: 62 - seched rate: 0.936367248117
+Epoch: 63 - seched rate: 0.936367248117
+Epoch: 64 - seched rate: 0.936367248117
+Epoch: 65 - seched rate: 0.936367248117
+Epoch: 66 - seched rate: 0.936367248117
+Epoch: 67 - seched rate: 0.936367248117
+Epoch: 68 - seched rate: 0.936367248117
+Epoch: 69 - seched rate: 0.936367248117
+Epoch: 70 - seched rate: 0.936367248117
+Epoch: 71 - seched rate: 0.936367248117
+Epoch: 72 - seched rate: 0.936367248117
+Epoch: 73 - seched rate: 0.936367248117
+Epoch: 74 - seched rate: 0.936367248117
+Epoch: 75 - seched rate: 0.936367248117
+4
+nll_upper_bound: 31.3987452181 recon_term: 28.2918337981 kl_term: 3.10691141997 mse1: 0.47506085841 mae1: 0.269307631429 mse2: 0.686169826816 mae2: 0.505092307471 
+Epoch: 76 - seched rate: 0.936367248117
+Epoch: 77 - seched rate: 0.936367248117
+Epoch: 78 - seched rate: 0.936367248117
+Epoch: 79 - seched rate: 0.936367248117
+Epoch: 80 - seched rate: 0.844076740345
+Epoch: 81 - seched rate: 0.844076740345
+Epoch: 82 - seched rate: 0.844076740345
+Epoch: 83 - seched rate: 0.844076740345
+Epoch: 84 - seched rate: 0.844076740345
+Epoch: 85 - seched rate: 0.844076740345
+Epoch: 86 - seched rate: 0.844076740345
+Epoch: 87 - seched rate: 0.844076740345
+Epoch: 88 - seched rate: 0.844076740345
+Epoch: 89 - seched rate: 0.844076740345
+Epoch: 90 - seched rate: 0.844076740345
+Epoch: 91 - seched rate: 0.844076740345
+Epoch: 92 - seched rate: 0.844076740345
+Epoch: 93 - seched rate: 0.844076740345
+4
+nll_upper_bound: -186.26580717 recon_term: -191.711808337 kl_term: 5.44600116625 mse1: 0.44117360174 mae1: 0.237546357398 mse2: 0.574027149067 mae2: 0.379909505848 
+Epoch: 94 - seched rate: 0.844076740345
+Epoch: 95 - seched rate: 0.844076740345
+Epoch: 96 - seched rate: 0.844076740345
+Epoch: 97 - seched rate: 0.844076740345
+Epoch: 98 - seched rate: 0.844076740345
+Epoch: 99 - seched rate: 0.844076740345
+Epoch: 100 - seched rate: 0.844076740345
+Epoch: 101 - seched rate: 0.844076740345
+Epoch: 102 - seched rate: 0.844076740345
+Epoch: 103 - seched rate: 0.844076740345
+Epoch: 104 - seched rate: 0.844076740345
+Epoch: 105 - seched rate: 0.844076740345
+Epoch: 106 - seched rate: 0.844076740345
+Epoch: 107 - seched rate: 0.844076740345
+Epoch: 108 - seched rate: 0.844076740345
+Epoch: 109 - seched rate: 0.844076740345
+Epoch: 110 - seched rate: 0.844076740345
+Epoch: 111 - seched rate: 0.844076740345
+Epoch: 112 - seched rate: 0.844076740345
+4
+nll_upper_bound: -464.485758409 recon_term: -467.862702748 kl_term: 3.37694433986 mse1: 0.350984460926 mae1: 0.220021972143 mse2: 0.482277721322 mae2: 0.314437212122 
+Epoch: 113 - seched rate: 0.844076740345
+Epoch: 114 - seched rate: 0.844076740345
+Epoch: 115 - seched rate: 0.844076740345
+Epoch: 116 - seched rate: 0.844076740345
+Epoch: 117 - seched rate: 0.844076740345
+Epoch: 118 - seched rate: 0.844076740345
+Epoch: 119 - seched rate: 0.844076740345
+Epoch: 120 - seched rate: 0.6657176094
+Epoch: 121 - seched rate: 0.6657176094
+Epoch: 122 - seched rate: 0.6657176094
+Epoch: 123 - seched rate: 0.6657176094
+Epoch: 124 - seched rate: 0.6657176094
+Epoch: 125 - seched rate: 0.6657176094
+Epoch: 126 - seched rate: 0.6657176094
+Epoch: 127 - seched rate: 0.6657176094
+Epoch: 128 - seched rate: 0.6657176094
+Epoch: 129 - seched rate: 0.6657176094
+Epoch: 130 - seched rate: 0.6657176094
+Epoch: 131 - seched rate: 0.6657176094
+4
+nll_upper_bound: -479.420120917 recon_term: -483.583366632 kl_term: 4.16324571521 mse1: 0.299653642169 mae1: 0.183527289276 mse2: 0.425843539749 mae2: 0.283602771717 
+Epoch: 132 - seched rate: 0.6657176094
+Epoch: 133 - seched rate: 0.6657176094
+Epoch: 134 - seched rate: 0.6657176094
+Epoch: 135 - seched rate: 0.6657176094
+Epoch: 136 - seched rate: 0.6657176094
+Epoch: 137 - seched rate: 0.6657176094
+Epoch: 138 - seched rate: 0.6657176094
+Epoch: 139 - seched rate: 0.6657176094
+Epoch: 140 - seched rate: 0.6657176094
+Epoch: 141 - seched rate: 0.6657176094
+Epoch: 142 - seched rate: 0.6657176094
+Epoch: 143  MONITORING STEP. Elapsed time: 1980.480201 epochs 150 batches seen 1200
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -445.914872
+ Elapsed time for monitoring all batches: 19.686678
+ MONITORING STEP. Elapsed time: 2020.913938 epochs 168 batches seen 1350
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -294.380191
+ Elapsed time for monitoring all batches: 19.185897
+ MONITORING STEP. Elapsed time: 1992.745042 epochs 187 batches seen 1500
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -432.175384
+ Elapsed time for monitoring all batches: 18.998591
+ MONITORING STEP. Elapsed time: 1996.701564 epochs 200 batches seen 1600
+ Optimization parameters
+ Learning rate: 0.001000
+ Beta_1: 0.900000
+ Beta_2: 0.999000
+ this_batch_nll_upper_bound: -474.060433
+ Elapsed time for monitoring all batches: 19.067907
+ Saving model to: /data/home/gbejara1/Documents/Research/Disaggregation/Dataport/VRNN_theano_version/output/allAtOnce/18-05-15_22-32/vrnn_gmm_1.pkl
+ Saving best model to: /data/home/gbejara1/Documents/Research/Disaggregation/Dataport/VRNN_theano_version/output/allAtOnce/18-05-15_22-32/vrnn_gmm_1_best.pkl
+Terminating main loop
+Closing remaining open files:/data/home/gbejara1/Documents/Research/Disaggregation/Dataport/datasets/dataid_8292_minute.h5...done
+- seched rate: 0.6657176094
+Epoch: 144 - seched rate: 0.6657176094
+Epoch: 145 - seched rate: 0.6657176094
+Epoch: 146 - seched rate: 0.6657176094
+Epoch: 147 - seched rate: 0.6657176094
+Epoch: 148 - seched rate: 0.6657176094
+Epoch: 149 - seched rate: 0.6657176094
+Epoch: 150 - seched rate: 0.6657176094
+4
+nll_upper_bound: -488.613085884 recon_term: -493.453031039 kl_term: 4.83994515464 mse1: 0.269449667341 mae1: 0.164923612615 mse2: 0.407718452449 mae2: 0.278959101192 
+Epoch: 151 - seched rate: 0.6657176094
+Epoch: 152 - seched rate: 0.6657176094
+Epoch: 153 - seched rate: 0.6657176094
+Epoch: 154 - seched rate: 0.6657176094
+Epoch: 155 - seched rate: 0.6657176094
+Epoch: 156 - seched rate: 0.6657176094
+Epoch: 157 - seched rate: 0.6657176094
+Epoch: 158 - seched rate: 0.6657176094
+Epoch: 159 - seched rate: 0.6657176094
+Epoch: 160 - seched rate: 0.422841249919
+Epoch: 161 - seched rate: 0.422841249919
+Epoch: 162 - seched rate: 0.422841249919
+Epoch: 163 - seched rate: 0.422841249919
+Epoch: 164 - seched rate: 0.422841249919
+Epoch: 165 - seched rate: 0.422841249919
+Epoch: 166 - seched rate: 0.422841249919
+Epoch: 167 - seched rate: 0.422841249919
+Epoch: 168 - seched rate: 0.422841249919
+4
+nll_upper_bound: -393.787517269 recon_term: -396.715486919 kl_term: 2.92796965023 mse1: 0.553882081529 mae1: 0.288902429135 mse2: 0.621031784347 mae2: 0.382856331763 
+Epoch: 169 - seched rate: 0.422841249919
+Epoch: 170 - seched rate: 0.422841249919
+Epoch: 171 - seched rate: 0.422841249919
+Epoch: 172 - seched rate: 0.422841249919
+Epoch: 173 - seched rate: 0.422841249919
+Epoch: 174 - seched rate: 0.422841249919
+Epoch: 175 - seched rate: 0.422841249919
+Epoch: 176 - seched rate: 0.422841249919
+Epoch: 177 - seched rate: 0.422841249919
+Epoch: 178 - seched rate: 0.422841249919
+Epoch: 179 - seched rate: 0.422841249919
+Epoch: 180 - seched rate: 0.422841249919
+Epoch: 181 - seched rate: 0.422841249919
+Epoch: 182 - seched rate: 0.422841249919
+Epoch: 183 - seched rate: 0.422841249919
+Epoch: 184 - seched rate: 0.422841249919
+Epoch: 185 - seched rate: 0.422841249919
+Epoch: 186 - seched rate: 0.422841249919
+Epoch: 187 - seched rate: 0.422841249919
+4
+nll_upper_bound: -497.447086153 recon_term: -500.439869777 kl_term: 2.99278362468 mse1: 0.396675209916 mae1: 0.215886467982 mse2: 0.507519461265 mae2: 0.323241177499 
+Epoch: 188 - seched rate: 0.422841249919
+Epoch: 189 - seched rate: 0.422841249919
+Epoch: 190 - seched rate: 0.422841249919
+Epoch: 191 - seched rate: 0.422841249919
+Epoch: 192 - seched rate: 0.422841249919
+Epoch: 193 - seched rate: 0.422841249919
+Epoch: 194 - seched rate: 0.422841249919
+Epoch: 195 - seched rate: 0.422841249919
+Epoch: 196 - seched rate: 0.422841249919
+Epoch: 197 - seched rate: 0.422841249919
+Epoch: 198 - seched rate: 0.422841249919
+Epoch: 199 - seched rate: 0.422841249919
+Epoch: 200 - seched rate: 0.212299396659
+4
+nll_upper_bound: -309.044641468 recon_term: -312.700445239 kl_term: 3.6558037705 mse1: 0.351880469357 mae1: 0.189859347313 mse2: 0.46149328524 mae2: 0.306351893604 
+(4, 27)
+ending
