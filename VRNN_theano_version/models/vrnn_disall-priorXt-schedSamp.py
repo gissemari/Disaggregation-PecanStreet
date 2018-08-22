@@ -30,13 +30,13 @@ from cle.cle.utils.compat import OrderedDict
 from cle.cle.utils.op import Gaussian_sample, GMM_sample, GMM_sampleY
 from cle.cle.utils.gpu_op import concatenate
 
-from VRNN_theano_version.datasets.dataport import Dataport
-from VRNN_theano_version.datasets.dataport_utils import fetch_dataport
+from preprocessing.dataport import Dataport
+from preprocessing.dataport_utils import fetch_dataport
 
 appliances = [ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
 #[ 'air1', 'furnace1','refrigerator1', 'clotheswasher1','drye1','dishwasher1', 'kitchenapp1','microwave1']
-windows = {8292:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
-#windows = {6990:("2015-06-01", "2015-11-01"), 2859:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
+#windows = {8292:("2015-01-01", "2016-01-01")}#3413:("2015-06-01", "2015-12-31")
+windows = {6990:("2015-06-01", "2015-11-01"), 7951:("2015-06-01", "2015-11-01"),8292:("2015-06-01",  "2015-11-01"),3413:("2015-06-01", "2015-11-01")}#3413:("2015-06-01", "2015-12-31")
 
 def main(args):
     
